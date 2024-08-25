@@ -2,7 +2,11 @@
 #include "RUDPServerCore.h"
 #include <WinSock2.h>
 
+#pragma comment(lib, "ws2_32.lib")
+
 RUDPServerCore::RUDPServerCore()
+	: sock(INVALID_SOCKET)
+	, port(-1)
 {
 }
 
