@@ -18,12 +18,16 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 		return false;
 	}
 
+	std::cout << "Server start" << std::endl;
 	return true;
 }
 
 void RUDPServerCore::StopServer()
 {
+	closesocket(sock);
+	WSACleanup();
 
+	std::cout << "Server stop" << std::endl;
 }
 
 bool RUDPServerCore::InitNetwork()
