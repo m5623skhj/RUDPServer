@@ -12,6 +12,12 @@ RUDPServerCore::RUDPServerCore()
 
 bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 {
+	if (InitializeRIO() == false)
+	{
+		std::cout << "InitializeRIO failed" << std::endl;
+		return false;
+	}
+
 	if (InitNetwork() == false)
 	{
 		std::cout << "InitNetwork failed" << std::endl;
@@ -26,6 +32,16 @@ void RUDPServerCore::StopServer()
 {
 	closesocket(sock);
 	WSACleanup();
+
+	for (auto& thread : ioThreadList)
+	{
+		thread.join();
+	}
+
+	for (auto& rioCQ : rioCQList)
+	{
+		rioFunctionTable.RIOCloseCompletionQueue(*rioCQ);
+	}
 
 	std::cout << "Server stop" << std::endl;
 }
@@ -62,6 +78,34 @@ bool RUDPServerCore::InitNetwork()
 		closesocket(sock);
 		WSACleanup();
 		return false;
+	}
+
+	return true;
+}
+
+bool RUDPServerCore::InitializeRIO()
+{
+	GUID functionTableId = WSAID_MULTIPLE_RIO;
+	DWORD bytes = 0;
+
+	if (WSAIoctl(sock
+		, SIO_GET_MULTIPLE_EXTENSION_FUNCTION_POINTER
+		, &functionTableId
+		, sizeof(GUID)
+		, reinterpret_cast<void**>(&rioFunctionTable)
+		, sizeof(rioFunctionTable)
+		, &bytes
+		, NULL
+		, NULL))
+	{
+		std::cout << "InitializeRIO failed " << WSAGetLastError() << std::endl;
+		return false;
+	}
+
+	rioCQList.reserve(threadCount);
+	for (int i = 0; i < threadCount; ++i)
+	{
+		rioCQList.push_back(new RIO_CQ());
 	}
 
 	return true;
