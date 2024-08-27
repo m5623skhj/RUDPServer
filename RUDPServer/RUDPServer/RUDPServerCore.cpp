@@ -24,12 +24,16 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 		return false;
 	}
 
+	StartThreads();
+
 	std::cout << "Server start" << std::endl;
 	return true;
 }
 
 void RUDPServerCore::StopServer()
 {
+	threadStopFlag = true;
+
 	closesocket(sock);
 	WSACleanup();
 
@@ -83,6 +87,38 @@ bool RUDPServerCore::InitNetwork()
 	return true;
 }
 
+void RUDPServerCore::RunWorkerThread()
+{
+	while (threadStopFlag == false)
+	{
+
+	}
+}
+
+void RUDPServerCore::RunLogicThread()
+{
+	while (threadStopFlag == false)
+	{
+
+	}
+}
+
+void RUDPServerCore::StartThreads()
+{
+	logicThreadList.reserve(logicThreadCount);
+	ioThreadList.reserve(ioThreadCount);
+
+	for (unsigned short i = 0; i < logicThreadCount; ++i)
+	{
+		logicThreadList.emplace_back([this]() { this->RunLogicThread(); });
+	}
+
+	for (unsigned short i = 0; i < ioThreadCount; ++i)
+	{
+		ioThreadList.emplace_back([this]() { this->RunWorkerThread(); });
+	}
+}
+
 bool RUDPServerCore::InitializeRIO()
 {
 	GUID functionTableId = WSAID_MULTIPLE_RIO;
@@ -102,8 +138,8 @@ bool RUDPServerCore::InitializeRIO()
 		return false;
 	}
 
-	rioCQList.reserve(threadCount);
-	for (int i = 0; i < threadCount; ++i)
+	rioCQList.reserve(ioThreadCount);
+	for (int i = 0; i < ioThreadCount; ++i)
 	{
 		rioCQList.push_back(new RIO_CQ());
 	}

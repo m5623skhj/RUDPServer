@@ -11,13 +11,6 @@ private:
 	virtual ~RUDPServerCore() = default;
 
 public:
-	static RUDPServerCore& GetInst()
-	{
-		static RUDPServerCore instance;
-		return instance;
-	}
-
-public:
 	bool StartServer(const std::wstring_view& optionFilePath);
 	void StopServer();
 
@@ -29,10 +22,21 @@ private:
 	unsigned short port;
 
 #pragma region threads
+public:
+	void RunWorkerThread();
+	void RunLogicThread();
+
 private:
+	void StartThreads();
+
+private:
+	std::vector<std::thread> logicThreadList;
 	std::vector<std::thread> ioThreadList;
 	std::vector<RIO_CQ*> rioCQList;
-	unsigned short threadCount;
+	unsigned short ioThreadCount;
+	unsigned short logicThreadCount;
+
+	bool threadStopFlag{};
 #pragma endregion threads
 
 #pragma region RIO
