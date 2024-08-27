@@ -24,6 +24,12 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 		return false;
 	}
 
+	logicThreadEventHandleList.reserve(logicThreadCount);
+	for (unsigned short i = 0; i < logicThreadCount; ++i)
+	{
+		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
+	}
+	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
 	StartThreads();
 
 	std::cout << "Server start" << std::endl;
@@ -42,9 +48,21 @@ void RUDPServerCore::StopServer()
 		thread.join();
 	}
 
+	SetEvent(logicThreadEventStopHandle);
+	for (auto& thread : logicThreadList)
+	{
+		thread.join();
+	}
+
 	for (auto& rioCQ : rioCQList)
 	{
 		rioFunctionTable.RIOCloseCompletionQueue(*rioCQ);
+	}
+
+	CloseHandle(logicThreadEventStopHandle);
+	for (auto handle : logicThreadEventHandleList)
+	{
+		CloseHandle(handle);
 	}
 
 	std::cout << "Server stop" << std::endl;
@@ -87,7 +105,7 @@ bool RUDPServerCore::InitNetwork()
 	return true;
 }
 
-void RUDPServerCore::RunWorkerThread()
+void RUDPServerCore::RunWorkerThread(unsigned short inThreadId)
 {
 	while (threadStopFlag == false)
 	{
@@ -95,10 +113,17 @@ void RUDPServerCore::RunWorkerThread()
 	}
 }
 
-void RUDPServerCore::RunLogicThread()
+void RUDPServerCore::RunLogicThread(unsigned short inThreadId)
 {
-	while (threadStopFlag == false)
+	HANDLE eventHandleList[2] = {logicThreadEventHandleList[inThreadId], logicThreadEventStopHandle};
+	while (true)
 	{
+		const auto waitResult = WaitForMultipleObjects(2, eventHandleList, FALSE, INFINITE);
+		if (waitResult == WAIT_OBJECT_0)
+		{
+			break;
+		}
+
 
 	}
 }
@@ -110,12 +135,12 @@ void RUDPServerCore::StartThreads()
 
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
-		logicThreadList.emplace_back([this]() { this->RunLogicThread(); });
+		logicThreadList.emplace_back([this, i]() { this->RunLogicThread(i); });
 	}
 
 	for (unsigned short i = 0; i < ioThreadCount; ++i)
 	{
-		ioThreadList.emplace_back([this]() { this->RunWorkerThread(); });
+		ioThreadList.emplace_back([this, i]() { this->RunWorkerThread(i); });
 	}
 }
 

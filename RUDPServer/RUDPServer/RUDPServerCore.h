@@ -23,8 +23,8 @@ private:
 
 #pragma region threads
 public:
-	void RunWorkerThread();
-	void RunLogicThread();
+	void RunWorkerThread(unsigned short inThreadId);
+	void RunLogicThread(unsigned short inThreadId);
 
 private:
 	void StartThreads();
@@ -35,6 +35,9 @@ private:
 	std::vector<RIO_CQ*> rioCQList;
 	unsigned short ioThreadCount;
 	unsigned short logicThreadCount;
+
+	std::vector<HANDLE> logicThreadEventHandleList;
+	HANDLE logicThreadEventStopHandle{};
 
 	bool threadStopFlag{};
 #pragma endregion threads
