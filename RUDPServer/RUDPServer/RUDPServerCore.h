@@ -32,7 +32,8 @@ private:
 private:
 	std::vector<std::thread> logicThreadList;
 	std::vector<std::thread> ioThreadList;
-	std::vector<RIO_CQ*> rioCQList;
+	std::vector<RIO_RQ> rioRQList;
+	std::vector<RIO_CQ> rioCQList;
 	unsigned short ioThreadCount;
 	unsigned short logicThreadCount;
 
@@ -48,5 +49,11 @@ private:
 
 private:
 	RIO_EXTENSION_FUNCTION_TABLE rioFunctionTable;
+	
+	const int rioCQSize = 65535;
+	const int rioMaxOutstadingReceive = 64;
+	const int rioReceiveDataBuffer = 16;
+	const int rioMaxOutStandingSend = 64;
+	const int rioMaxSendDataBuffers = 16;
 #pragma endregion RIO
 };

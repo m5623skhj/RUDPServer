@@ -56,7 +56,7 @@ void RUDPServerCore::StopServer()
 
 	for (auto& rioCQ : rioCQList)
 	{
-		rioFunctionTable.RIOCloseCompletionQueue(*rioCQ);
+		rioFunctionTable.RIOCloseCompletionQueue(rioCQ);
 	}
 
 	CloseHandle(logicThreadEventStopHandle);
@@ -79,7 +79,7 @@ bool RUDPServerCore::InitNetwork()
 		return false;
 	}
 
-	this->sock = socket(AF_INET, SOCK_DGRAM, 0);
+	this->sock = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_REGISTERED_IO);
 	if (sock == INVALID_SOCKET)
 	{
 		std::cout << "socket create failed " << WSAGetLastError() << std::endl;
@@ -121,10 +121,17 @@ void RUDPServerCore::RunLogicThread(unsigned short inThreadId)
 		const auto waitResult = WaitForMultipleObjects(2, eventHandleList, FALSE, INFINITE);
 		if (waitResult == WAIT_OBJECT_0)
 		{
-			break;
+			// Logic
 		}
-
-
+		else if (waitResult == WAIT_OBJECT_0 + 1)
+		{
+			std::cout << "Logic thread stop. ThreadId is " << inThreadId << std::endl;
+		}
+		else
+		{
+			std::cout << "Invalid logic thread wait result. Error is " << WSAGetLastError() << std::endl;
+			continue;
+		}
 	}
 }
 
@@ -166,7 +173,26 @@ bool RUDPServerCore::InitializeRIO()
 	rioCQList.reserve(ioThreadCount);
 	for (int i = 0; i < ioThreadCount; ++i)
 	{
-		rioCQList.push_back(new RIO_CQ());
+		rioCQList.emplace_back(rioFunctionTable.RIOCreateCompletionQueue(rioCQSize, nullptr));
+		if (rioCQList[i] == RIO_INVALID_CQ)
+		{
+			std::cout << "RIOCreateCompletionQueue failed with error " << WSAGetLastError() << std::endl;
+			return false;
+		}
+
+		rioRQList.emplace_back(rioFunctionTable.RIOCreateRequestQueue(sock
+		, rioMaxOutstadingReceive
+		, rioReceiveDataBuffer
+		, rioMaxOutStandingSend
+		, rioMaxSendDataBuffers
+		, rioCQList[i]
+		, rioCQList[i]
+		, NULL));
+		if (rioRQList[i] == RIO_INVALID_RQ)
+		{
+			std::cout << "RioCreateRequestQueue failed with error " << WSAGetLastError() << std::endl;
+			return false;
+		}
 	}
 
 	return true;
