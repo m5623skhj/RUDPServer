@@ -126,6 +126,7 @@ void RUDPServerCore::RunLogicThread(unsigned short inThreadId)
 		else if (waitResult == WAIT_OBJECT_0 + 1)
 		{
 			std::cout << "Logic thread stop. ThreadId is " << inThreadId << std::endl;
+			// Check all logic event is finished
 		}
 		else
 		{
