@@ -28,6 +28,7 @@ public:
 
 private:
 	void StartThreads();
+	ULONG RIODequeueCompletion(RIO_CQ& rioCQ, RIORESULT* rioResults);
 
 private:
 	std::vector<std::thread> logicThreadList;
@@ -55,5 +56,7 @@ private:
 	const int rioReceiveDataBuffer = 16;
 	const int rioMaxOutStandingSend = 64;
 	const int rioMaxSendDataBuffers = 16;
+
+	const int rioMaxResultsSize = 1024;
 #pragma endregion RIO
 };

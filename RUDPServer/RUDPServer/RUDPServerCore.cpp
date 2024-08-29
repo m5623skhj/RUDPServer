@@ -1,6 +1,7 @@
 #include "PreCompile.h"
 #include "RUDPServerCore.h"
 #include <WinSock2.h>
+#include <vector>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -107,8 +108,10 @@ bool RUDPServerCore::InitNetwork()
 
 void RUDPServerCore::RunWorkerThread(unsigned short inThreadId)
 {
+	RIORESULT* rioResultsBuffer = new RIORESULT[rioMaxResultsSize];
 	while (threadStopFlag == false)
 	{
+		ULONG resultsSize = RIODequeueCompletion(rioCQList[inThreadId], rioResultsBuffer);
 
 	}
 }
@@ -150,6 +153,18 @@ void RUDPServerCore::StartThreads()
 	{
 		ioThreadList.emplace_back([this, i]() { this->RunWorkerThread(i); });
 	}
+}
+
+ULONG RUDPServerCore::RIODequeueCompletion(RIO_CQ& rioCQ, RIORESULT* rioResults)
+{
+	ULONG numOfResults = rioFunctionTable.RIODequeueCompletion(rioCQ, rioResults, rioMaxResultsSize);
+	if (numOfResults == RIO_CORRUPT_CQ)
+	{
+		std::cout << "RIODequeueCompletion failed with error " << WSAGetLastError() << std::endl;
+		g_Dump.Crash();
+	}
+
+	return numOfResults;
 }
 
 bool RUDPServerCore::InitializeRIO()

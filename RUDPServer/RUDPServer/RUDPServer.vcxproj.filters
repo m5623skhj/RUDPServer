@@ -16,6 +16,9 @@
     <Filter Include="소스 파일\RUDPCore">
       <UniqueIdentifier>{0ebe0f48-0969-44c3-a236-c146070f8fc2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\lib">
+      <UniqueIdentifier>{e962855b-6aab-480c-a659-b937289e9192}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -24,9 +27,21 @@
     <ClCompile Include="RUDPServerCore.cpp">
       <Filter>소스 파일\RUDPCore</Filter>
     </ClCompile>
+    <ClCompile Include="RUDPSession.cpp">
+      <Filter>소스 파일\RUDPCore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Desktop\Common\NetServerSerializeBuffer.cpp">
+      <Filter>소스 파일\lib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RUDPServerCore.h">
+      <Filter>소스 파일\RUDPCore</Filter>
+    </ClInclude>
+    <ClInclude Include="RUDPSession.h">
+      <Filter>소스 파일\RUDPCore</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreType.h">
       <Filter>소스 파일\RUDPCore</Filter>
     </ClInclude>
   </ItemGroup>
