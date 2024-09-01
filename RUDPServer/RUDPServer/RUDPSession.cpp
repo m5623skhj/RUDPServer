@@ -22,6 +22,26 @@ void SendPacketSequeceManager::Initialize()
 	sequenceManager.clear();
 }
 
+RecvPacketSequenceManager::RecvPacketSequenceManager()
+{
+	Initialize();
+}
+
+void RecvPacketSequenceManager::Initialize()
+{
+	for (auto& iter : sequenceManager)
+	{
+		for (auto& innerIter : iter.second)
+		{
+			NetBuffer::Free(innerIter.second.buffer);
+		}
+
+		iter.second.clear();
+	}
+
+	sequenceManager.clear();
+}
+
 RUDPSession::RUDPSession(SessionId inSessionId)
 	: sessionId(inSessionId)
 {
