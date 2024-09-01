@@ -102,6 +102,9 @@ private:
 private:
 	std::shared_ptr<RUDPSession> GetSession(const std::string_view& ownerIP);
 
+	FORCEINLINE void IOCountDecrement(OUT RUDPSession& session);
+	FORCEINLINE bool ReleaseSession(OUT RUDPSession& releaseSession);
+
 private:
 	std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>> sessionMap;
 	std::shared_mutex sessionMapLock;

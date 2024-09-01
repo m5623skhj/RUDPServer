@@ -278,7 +278,7 @@ std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(RIORESULT& 
 	if (rioResult.BytesTransferred == 0 || result.session->ioCancle == true)
 	{
 		contextPool.Free(context);
-		//IOCountDecrement(*result.session);
+		IOCountDecrement(*result.session);
 		return std::nullopt;
 	}
 
@@ -296,4 +296,24 @@ std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const std::string_view& 
 	}
 
 	return iter->second;
+}
+
+void RUDPServerCore::IOCountDecrement(OUT RUDPSession& session)
+{
+	if (InterlockedDecrement(&session.ioCount) == 0)
+	{
+		ReleaseSession(session);
+	}
+}
+
+bool RUDPServerCore::ReleaseSession(OUT RUDPSession& releaseSession)
+{
+	{
+		std::shared_lock lock(sessionMapLock);
+		sessionMap.erase(releaseSession.ownerIP);
+	}
+
+	releaseSession.OnSessionReleased();
+
+	return true;
 }

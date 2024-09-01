@@ -56,8 +56,7 @@ class RUDPSession
 	friend RUDPServerCore;
 
 public:
-	RUDPSession() = delete;
-	explicit RUDPSession(SessionId inSessionId);
+	RUDPSession();
 	~RUDPSession() = default;
 
 public:
@@ -69,8 +68,10 @@ private:
 	bool CheckMaxRetransmitCount(PacketRetransmissionCount retransmissionCount);
 
 private:
-	SessionId sessionId{ invalidSessionId };
-	PacketSequence lastSendPacketSequence{ 0 };
+	void OnSessionReleased();
+
+private:
+	PacketSequence lastSendPacketSequence{};
 
 private:
 	SendPacketSequeceManager sendPacketSequenceManager;
@@ -78,4 +79,6 @@ private:
 
 private:
 	bool ioCancle{};
+	LONG ioCount{};
+	std::string ownerIP{};
 };

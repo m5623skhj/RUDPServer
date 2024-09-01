@@ -42,8 +42,7 @@ void RecvPacketSequenceManager::Initialize()
 	sequenceManager.clear();
 }
 
-RUDPSession::RUDPSession(SessionId inSessionId)
-	: sessionId(inSessionId)
+RUDPSession::RUDPSession()
 {
 	sendPacketSequenceManager.Initialize();
 }
@@ -61,4 +60,9 @@ void RUDPSession::CheckAndRetransmitPacket()
 bool RUDPSession::CheckMaxRetransmitCount(PacketRetransmissionCount retransmissionCount)
 {
 	return maxPacketRetransmissionCount <= retransmissionCount;
+}
+
+void RUDPSession::OnSessionReleased()
+{
+
 }
