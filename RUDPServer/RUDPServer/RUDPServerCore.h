@@ -3,6 +3,29 @@
 #include <thread>
 #include <vector>
 #include <MSWSock.h>
+#include <optional>
+#include "EnumType.h"
+#include <shared_mutex>
+#include <unordered_map>
+
+class RUDPSession;
+
+struct IOContext : RIO_BUF
+{
+	IOContext() = default;
+	virtual ~IOContext() = default;
+
+	void InitContext(const std::string_view& inIP, RIO_OPERATION_TYPE inIOType);
+
+	std::string ownerIP;
+	RIO_OPERATION_TYPE ioType = RIO_OPERATION_TYPE::OP_ERROR;
+};
+
+struct IOContextResult
+{
+	IOContext* ioContext;
+	std::shared_ptr<RUDPSession> session;
+};
 
 class RUDPServerCore
 {
@@ -59,10 +82,13 @@ private:
 #pragma region RIO
 private:
 	bool InitializeRIO();
+	std::optional<IOContextResult> GetIOCompletedContext(RIORESULT& rioResult);
 
 private:
 	RIO_EXTENSION_FUNCTION_TABLE rioFunctionTable;
-	
+
+	CTLSMemoryPool<IOContext> contextPool;
+
 	const int rioCQSize = 65535;
 	const int rioMaxOutstadingReceive = 64;
 	const int rioReceiveDataBuffer = 16;
@@ -71,4 +97,13 @@ private:
 
 	const int rioMaxResultsSize = 1024;
 #pragma endregion RIO
+
+#pragma region Session
+private:
+	std::shared_ptr<RUDPSession> GetSession(const std::string_view& ownerIP);
+
+private:
+	std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>> sessionMap;
+	std::shared_mutex sessionMapLock;
+#pragma endregion Session
 };

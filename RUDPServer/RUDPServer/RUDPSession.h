@@ -4,6 +4,8 @@
 #include <chrono>
 #include "NetServerSerializeBuffer.h"
 
+class RUDPServerCore;
+
 struct SendPacketInfo
 {
 	bool isSendedPacket{};
@@ -51,6 +53,8 @@ private:
 
 class RUDPSession
 {
+	friend RUDPServerCore;
+
 public:
 	RUDPSession() = delete;
 	explicit RUDPSession(SessionId inSessionId);
@@ -71,4 +75,7 @@ private:
 private:
 	SendPacketSequeceManager sendPacketSequenceManager;
 	RecvPacketSequenceManager recvPacketSequenceManager;
+
+private:
+	bool ioCancle{};
 };

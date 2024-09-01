@@ -4,12 +4,22 @@
 #include <vector>
 #include <functional>
 #include "BuildConfig.h"
+#include "EnumType.h"
+#include "RUDPSession.h"
+#include <shared_mutex>
 
 #pragma comment(lib, "ws2_32.lib")
+
+void IOContext::InitContext(const std::string_view& inIP, RIO_OPERATION_TYPE inIOType)
+{
+	ownerIP = inIP;
+	ioType = inIOType;
+}
 
 RUDPServerCore::RUDPServerCore()
 	: sock(INVALID_SOCKET)
 	, port(-1)
+	, contextPool(2, false)
 {
 }
 
@@ -114,13 +124,20 @@ void RUDPServerCore::RunWorkerThread(unsigned short inThreadId)
 
 	TickSet tickSet;
 	tickSet.nowTick = GetTickCount64();
-
-	tickSet.nowTick = GetTickCount64();
 	tickSet.beforeTick = tickSet.nowTick;
 
 	while (threadStopFlag == false)
 	{
 		ULONG resultsSize = RIODequeueCompletion(rioCQList[inThreadId], rioResultsBuffer);
+		for (ULONG resultIndex = 0; resultIndex < resultsSize; ++resultIndex)
+		{
+			IO_POST_ERROR result = IO_POST_ERROR::SUCCESS;
+			auto contextResult = GetIOCompletedContext(rioResultsBuffer[resultIndex]);
+			if (contextResult == std::nullopt)
+			{
+				continue;
+			}
+		}
 
 #if USE_SLEEP_FOR_FRAME
 		SleepRemainingFrameTime(tickSet);
@@ -237,4 +254,46 @@ bool RUDPServerCore::InitializeRIO()
 	}
 
 	return true;
+}
+
+std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(RIORESULT& rioResult)
+{
+	IOContext* context = reinterpret_cast<IOContext*>(rioResult.RequestContext);
+	if (context == nullptr)
+	{
+		return std::nullopt;
+	}
+
+	IOContextResult result;
+	{
+		auto session = GetSession(context->ownerIP);
+		if (session == nullptr)
+		{
+			contextPool.Free(context);
+			return std::nullopt;
+		}
+		result.session = session;
+	}
+
+	if (rioResult.BytesTransferred == 0 || result.session->ioCancle == true)
+	{
+		contextPool.Free(context);
+		//IOCountDecrement(*result.session);
+		return std::nullopt;
+	}
+
+	result.ioContext = context;
+	return result;
+}
+
+std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const std::string_view& ownerIP)
+{
+	std::shared_lock lock(sessionMapLock);
+	auto iter = sessionMap.find(ownerIP);
+	if (iter == sessionMap.end())
+	{
+		return nullptr;
+	}
+
+	return iter->second;
 }

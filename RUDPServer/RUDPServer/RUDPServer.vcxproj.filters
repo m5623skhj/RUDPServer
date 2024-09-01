@@ -19,6 +19,9 @@
     <Filter Include="소스 파일\lib">
       <UniqueIdentifier>{e962855b-6aab-480c-a659-b937289e9192}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\RUDPCore\CoreTypes">
+      <UniqueIdentifier>{5b37a268-ba22-451e-a5a8-fc586dbe0aa4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -41,11 +44,14 @@
     <ClInclude Include="RUDPSession.h">
       <Filter>소스 파일\RUDPCore</Filter>
     </ClInclude>
-    <ClInclude Include="CoreType.h">
-      <Filter>소스 파일\RUDPCore</Filter>
-    </ClInclude>
     <ClInclude Include="BuildConfig.h">
-      <Filter>소스 파일\RUDPCore</Filter>
+      <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreType.h">
+      <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="EnumType.h">
+      <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
