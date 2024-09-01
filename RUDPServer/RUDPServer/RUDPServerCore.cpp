@@ -2,6 +2,8 @@
 #include "RUDPServerCore.h"
 #include <WinSock2.h>
 #include <vector>
+#include <functional>
+#include "BuildConfig.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -109,10 +111,20 @@ bool RUDPServerCore::InitNetwork()
 void RUDPServerCore::RunWorkerThread(unsigned short inThreadId)
 {
 	RIORESULT* rioResultsBuffer = new RIORESULT[rioMaxResultsSize];
+
+	TickSet tickSet;
+	tickSet.nowTick = GetTickCount64();
+
+	tickSet.nowTick = GetTickCount64();
+	tickSet.beforeTick = tickSet.nowTick;
+
 	while (threadStopFlag == false)
 	{
 		ULONG resultsSize = RIODequeueCompletion(rioCQList[inThreadId], rioResultsBuffer);
 
+#if USE_SLEEP_FOR_FRAME
+		SleepRemainingFrameTime(tickSet);
+#endif
 	}
 }
 
@@ -165,6 +177,19 @@ ULONG RUDPServerCore::RIODequeueCompletion(RIO_CQ& rioCQ, RIORESULT* rioResults)
 	}
 
 	return numOfResults;
+}
+
+void RUDPServerCore::SleepRemainingFrameTime(OUT TickSet& tickSet)
+{
+	tickSet.nowTick = GetTickCount64();
+	UINT64 deltaTick = tickSet.nowTick - tickSet.beforeTick;
+
+	if (deltaTick < oneFrame && deltaTick > 0)
+	{
+		Sleep(oneFrame - static_cast<DWORD>(deltaTick));
+	}
+
+	tickSet.beforeTick = tickSet.nowTick;
 }
 
 bool RUDPServerCore::InitializeRIO()

@@ -31,6 +31,16 @@ private:
 	ULONG RIODequeueCompletion(RIO_CQ& rioCQ, RIORESULT* rioResults);
 
 private:
+	struct TickSet
+	{
+		UINT64 nowTick = 0;
+		UINT64 beforeTick = 0;
+	};
+
+private:
+	FORCEINLINE void SleepRemainingFrameTime(OUT TickSet& tickSet);
+
+private:
 	std::vector<std::thread> logicThreadList;
 	std::vector<std::thread> ioThreadList;
 	std::vector<RIO_RQ> rioRQList;
@@ -42,6 +52,8 @@ private:
 	HANDLE logicThreadEventStopHandle{};
 
 	bool threadStopFlag{};
+
+	unsigned int oneFrame = 33;
 #pragma endregion threads
 
 #pragma region RIO
