@@ -137,11 +137,11 @@ void RUDPServerCore::RunWorkerThread(unsigned short inThreadId)
 			{
 				continue;
 			}
+
+			// IO complete process
 		}
 
-#if USE_SLEEP_FOR_FRAME
-		SleepRemainingFrameTime(tickSet);
-#endif
+		// Check the retransmission at the list of sessions you currently have
 	}
 }
 
@@ -194,19 +194,6 @@ ULONG RUDPServerCore::RIODequeueCompletion(RIO_CQ& rioCQ, RIORESULT* rioResults)
 	}
 
 	return numOfResults;
-}
-
-void RUDPServerCore::SleepRemainingFrameTime(OUT TickSet& tickSet)
-{
-	tickSet.nowTick = GetTickCount64();
-	UINT64 deltaTick = tickSet.nowTick - tickSet.beforeTick;
-
-	if (deltaTick < oneFrame && deltaTick > 0)
-	{
-		Sleep(oneFrame - static_cast<DWORD>(deltaTick));
-	}
-
-	tickSet.beforeTick = tickSet.nowTick;
 }
 
 bool RUDPServerCore::InitializeRIO()
@@ -278,7 +265,6 @@ std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(RIORESULT& 
 	if (rioResult.BytesTransferred == 0 || result.session->ioCancle == true)
 	{
 		contextPool.Free(context);
-		IOCountDecrement(*result.session);
 		return std::nullopt;
 	}
 
@@ -296,14 +282,6 @@ std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const std::string_view& 
 	}
 
 	return iter->second;
-}
-
-void RUDPServerCore::IOCountDecrement(OUT RUDPSession& session)
-{
-	if (InterlockedDecrement(&session.ioCount) == 0)
-	{
-		ReleaseSession(session);
-	}
 }
 
 bool RUDPServerCore::ReleaseSession(OUT RUDPSession& releaseSession)

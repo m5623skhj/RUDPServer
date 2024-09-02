@@ -61,15 +61,12 @@ private:
 	};
 
 private:
-	FORCEINLINE void SleepRemainingFrameTime(OUT TickSet& tickSet);
-
-private:
 	std::vector<std::thread> logicThreadList;
 	std::vector<std::thread> ioThreadList;
 	std::vector<RIO_RQ> rioRQList;
 	std::vector<RIO_CQ> rioCQList;
-	unsigned short ioThreadCount;
-	unsigned short logicThreadCount;
+	unsigned short ioThreadCount{};
+	unsigned short logicThreadCount{};
 
 	std::vector<HANDLE> logicThreadEventHandleList;
 	HANDLE logicThreadEventStopHandle{};
@@ -85,7 +82,7 @@ private:
 	std::optional<IOContextResult> GetIOCompletedContext(RIORESULT& rioResult);
 
 private:
-	RIO_EXTENSION_FUNCTION_TABLE rioFunctionTable;
+	RIO_EXTENSION_FUNCTION_TABLE rioFunctionTable{};
 
 	CTLSMemoryPool<IOContext> contextPool;
 
@@ -101,8 +98,6 @@ private:
 #pragma region Session
 private:
 	std::shared_ptr<RUDPSession> GetSession(const std::string_view& ownerIP);
-
-	FORCEINLINE void IOCountDecrement(OUT RUDPSession& session);
 	FORCEINLINE bool ReleaseSession(OUT RUDPSession& releaseSession);
 
 private:

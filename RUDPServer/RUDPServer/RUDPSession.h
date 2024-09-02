@@ -79,6 +79,5 @@ private:
 
 private:
 	bool ioCancle{};
-	LONG ioCount{};
 	std::string ownerIP{};
 };
