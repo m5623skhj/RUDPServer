@@ -42,6 +42,7 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
 		sessionMap.emplace_back();
+		sessionMapLock.emplace_back();
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 	}
 	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);

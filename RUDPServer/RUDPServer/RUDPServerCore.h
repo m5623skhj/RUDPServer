@@ -102,6 +102,7 @@ private:
 	FORCEINLINE bool ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession);
 
 private:
+	std::vector<std::unique_ptr<std::shared_mutex>> sessionMapLock;
 	std::vector<std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>>> sessionMap;
 #pragma endregion Session
 };
