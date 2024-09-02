@@ -41,8 +41,7 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 	logicThreadEventHandleList.reserve(logicThreadCount);
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
-		std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>> tempMap;
-		sessionMap.emplace_back(std::move(tempMap));
+		sessionMap.emplace_back();
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 	}
 	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
