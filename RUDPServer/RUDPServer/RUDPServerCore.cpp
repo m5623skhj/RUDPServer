@@ -303,6 +303,8 @@ IO_POST_ERROR RUDPServerCore::PostIOCompleted(IOContext& context, ULONG transfer
 
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId, const std::string_view& ownerIP)
 {
+	std::shared_lock lock(*sessionMapLock[threadId]);
+
 	auto iter = sessionMap[threadId].find(ownerIP);
 	if (iter == sessionMap[threadId].end())
 	{
@@ -314,7 +316,10 @@ std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId,
 
 bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession)
 {
-	sessionMap[threadId].erase(releaseSession.ownerIP);
+	{
+		std::unique_lock<std::shared_mutex> lock(*sessionMapLock[threadId]);
+		sessionMap[threadId].erase(releaseSession.ownerIP);
+	}
 	releaseSession.OnSessionReleased();
 
 	return true;
