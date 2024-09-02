@@ -37,9 +37,12 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 		return false;
 	}
 
+	sessionMap.reserve(logicThreadCount);
 	logicThreadEventHandleList.reserve(logicThreadCount);
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
+		std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>> tempMap;
+		sessionMap.emplace_back(std::move(tempMap));
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 	}
 	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -132,13 +135,21 @@ void RUDPServerCore::RunWorkerThread(unsigned short inThreadId)
 		for (ULONG resultIndex = 0; resultIndex < resultsSize; ++resultIndex)
 		{
 			IO_POST_ERROR result = IO_POST_ERROR::SUCCESS;
-			auto contextResult = GetIOCompletedContext(rioResultsBuffer[resultIndex]);
+			auto contextResult = GetIOCompletedContext(inThreadId, rioResultsBuffer[resultIndex]);
 			if (contextResult == std::nullopt)
 			{
 				continue;
 			}
 
-			// IO complete process
+			result = PostIOCompleted(*contextResult->ioContext
+				, rioResultsBuffer[resultIndex].BytesTransferred
+				, contextResult->session
+				, inThreadId);
+			if (result == IO_POST_ERROR::INVALID_OPERATION_TYPE)
+			{
+				continue;
+			}
+			contextPool.Free(contextResult->ioContext);
 		}
 
 		// Check the retransmission at the list of sessions you currently have
@@ -243,7 +254,7 @@ bool RUDPServerCore::InitializeRIO()
 	return true;
 }
 
-std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(RIORESULT& rioResult)
+std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(unsigned short threadId, RIORESULT& rioResult)
 {
 	IOContext* context = reinterpret_cast<IOContext*>(rioResult.RequestContext);
 	if (context == nullptr)
@@ -253,7 +264,7 @@ std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(RIORESULT& 
 
 	IOContextResult result;
 	{
-		auto session = GetSession(context->ownerIP);
+		auto session = GetSession(threadId, context->ownerIP);
 		if (session == nullptr)
 		{
 			contextPool.Free(context);
@@ -272,11 +283,28 @@ std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(RIORESULT& 
 	return result;
 }
 
-std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const std::string_view& ownerIP)
+IO_POST_ERROR RUDPServerCore::PostIOCompleted(IOContext& context, ULONG transferred, std::shared_ptr<RUDPSession> session, unsigned short threadId)
 {
-	std::shared_lock lock(sessionMapLock);
-	auto iter = sessionMap.find(ownerIP);
-	if (iter == sessionMap.end())
+	if (context.ioType == RIO_OPERATION_TYPE::OP_RECV)
+	{
+		//return RecvIOCompleted(transferred, session, threadId);
+	}
+	else if (context.ioType == RIO_OPERATION_TYPE::OP_SEND)
+	{
+		//return SendIOCompleted(transferred, session, threadId);
+	}
+	else
+	{
+		//InvalidIOCompleted(context);
+	}
+
+	return IO_POST_ERROR::INVALID_OPERATION_TYPE;
+}
+
+std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId, const std::string_view& ownerIP)
+{
+	auto iter = sessionMap[threadId].find(ownerIP);
+	if (iter == sessionMap[threadId].end())
 	{
 		return nullptr;
 	}
@@ -284,13 +312,9 @@ std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const std::string_view& 
 	return iter->second;
 }
 
-bool RUDPServerCore::ReleaseSession(OUT RUDPSession& releaseSession)
+bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession)
 {
-	{
-		std::shared_lock lock(sessionMapLock);
-		sessionMap.erase(releaseSession.ownerIP);
-	}
-
+	sessionMap[threadId].erase(releaseSession.ownerIP);
 	releaseSession.OnSessionReleased();
 
 	return true;

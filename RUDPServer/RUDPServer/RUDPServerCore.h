@@ -79,7 +79,8 @@ private:
 #pragma region RIO
 private:
 	bool InitializeRIO();
-	std::optional<IOContextResult> GetIOCompletedContext(RIORESULT& rioResult);
+	std::optional<IOContextResult> GetIOCompletedContext(unsigned short threadId, RIORESULT& rioResult);
+	IO_POST_ERROR PostIOCompleted(IOContext& context, ULONG transferred, std::shared_ptr<RUDPSession> session, unsigned short threadId);
 
 private:
 	RIO_EXTENSION_FUNCTION_TABLE rioFunctionTable{};
@@ -97,11 +98,10 @@ private:
 
 #pragma region Session
 private:
-	std::shared_ptr<RUDPSession> GetSession(const std::string_view& ownerIP);
-	FORCEINLINE bool ReleaseSession(OUT RUDPSession& releaseSession);
+	std::shared_ptr<RUDPSession> GetSession(unsigned short threadId, const std::string_view& ownerIP);
+	FORCEINLINE bool ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession);
 
 private:
-	std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>> sessionMap;
-	std::shared_mutex sessionMapLock;
+	std::vector<std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>>> sessionMap;
 #pragma endregion Session
 };
