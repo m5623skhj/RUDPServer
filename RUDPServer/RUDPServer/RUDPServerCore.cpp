@@ -46,10 +46,7 @@ void RUDPServerCore::StopServer()
 	closesocket(sock);
 	WSACleanup();
 
-	for (auto& thread : ioThreadList)
-	{
-		thread.join();
-	}
+	recvThread.join();
 
 	SetEvent(logicThreadEventStopHandle);
 	for (auto& thread : logicThreadList)
@@ -103,11 +100,35 @@ bool RUDPServerCore::InitNetwork()
 	return true;
 }
 
-void RUDPServerCore::RunIOWorkerThread(unsigned short inThreadId)
+void RUDPServerCore::RunIORecvWorkerThread()
 {
+	SOCKADDR_IN clientAddr;
+	int addrSize = sizeof(clientAddr);
+	ZeroMemory(&clientAddr, addrSize);
+	int recvSize;
 	while (threadStopFlag == false)
 	{
+		auto buffer = NetBuffer::Alloc();
+		do
+		{
+			recvSize = recvfrom(sock
+				, buffer->GetWriteBufferPtr()
+				, buffer->GetFreeSize()
+				, NULL
+				, (SOCKADDR*)&clientAddr
+				, &addrSize);
 
+			if (recvSize == SOCKET_ERROR)
+			{
+				int error = WSAGetLastError();
+				// 소켓 에러 처리
+
+				continue;
+			}
+		} while (false);
+
+		// clientAddr에서 IP를 확인하고 해당하는 스레드 번호 생성
+		// 다른 logic 스레드로 버퍼 전달
 	}
 }
 
@@ -137,17 +158,13 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 void RUDPServerCore::StartThreads()
 {
 	logicThreadList.reserve(logicThreadCount);
-	ioThreadList.reserve(ioThreadCount);
 
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
-		logicThreadList.emplace_back([this, i]() { this->RunIOWorkerThread(i); });
+		logicThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
 	}
 
-	for (unsigned short i = 0; i < ioThreadCount; ++i)
-	{
-		ioThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
-	}
+	recvThread = std::thread([this]() {this->RunIORecvWorkerThread(); });
 }
 
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId, const std::string_view& ownerIP)

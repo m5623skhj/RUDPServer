@@ -28,7 +28,7 @@ private:
 
 #pragma region threads
 public:
-	void RunIOWorkerThread(unsigned short inThreadId);
+	void RunIORecvWorkerThread();
 	void RunLogicWorkerThread(unsigned short inThreadId);
 
 private:
@@ -42,9 +42,8 @@ private:
 	};
 
 private:
+	std::thread recvThread;
 	std::vector<std::thread> logicThreadList;
-	std::vector<std::thread> ioThreadList;
-	unsigned short ioThreadCount{};
 	unsigned short logicThreadCount{};
 
 	std::vector<HANDLE> logicThreadEventHandleList;
