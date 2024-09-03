@@ -10,27 +10,14 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
-void IOContext::InitContext(const std::string_view& inIP, RIO_OPERATION_TYPE inIOType)
-{
-	ownerIP = inIP;
-	ioType = inIOType;
-}
-
 RUDPServerCore::RUDPServerCore()
 	: sock(INVALID_SOCKET)
 	, port(-1)
-	, contextPool(2, false)
 {
 }
 
 bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 {
-	if (InitializeRIO() == false)
-	{
-		std::cout << "InitializeRIO failed" << std::endl;
-		return false;
-	}
-
 	if (InitNetwork() == false)
 	{
 		std::cout << "InitNetwork failed" << std::endl;
@@ -68,11 +55,6 @@ void RUDPServerCore::StopServer()
 	for (auto& thread : logicThreadList)
 	{
 		thread.join();
-	}
-
-	for (auto& rioCQ : rioCQList)
-	{
-		rioFunctionTable.RIOCloseCompletionQueue(rioCQ);
 	}
 
 	CloseHandle(logicThreadEventStopHandle);
@@ -121,42 +103,15 @@ bool RUDPServerCore::InitNetwork()
 	return true;
 }
 
-void RUDPServerCore::RunWorkerThread(unsigned short inThreadId)
+void RUDPServerCore::RunIOWorkerThread(unsigned short inThreadId)
 {
-	RIORESULT* rioResultsBuffer = new RIORESULT[rioMaxResultsSize];
-
-	TickSet tickSet;
-	tickSet.nowTick = GetTickCount64();
-	tickSet.beforeTick = tickSet.nowTick;
-
 	while (threadStopFlag == false)
 	{
-		ULONG resultsSize = RIODequeueCompletion(rioCQList[inThreadId], rioResultsBuffer);
-		for (ULONG resultIndex = 0; resultIndex < resultsSize; ++resultIndex)
-		{
-			IO_POST_ERROR result = IO_POST_ERROR::SUCCESS;
-			auto contextResult = GetIOCompletedContext(inThreadId, rioResultsBuffer[resultIndex]);
-			if (contextResult == std::nullopt)
-			{
-				continue;
-			}
 
-			result = PostIOCompleted(*contextResult->ioContext
-				, rioResultsBuffer[resultIndex].BytesTransferred
-				, contextResult->session
-				, inThreadId);
-			if (result == IO_POST_ERROR::INVALID_OPERATION_TYPE)
-			{
-				continue;
-			}
-			contextPool.Free(contextResult->ioContext);
-		}
-
-		// Check the retransmission at the list of sessions you currently have
 	}
 }
 
-void RUDPServerCore::RunLogicThread(unsigned short inThreadId)
+void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 {
 	HANDLE eventHandleList[2] = {logicThreadEventHandleList[inThreadId], logicThreadEventStopHandle};
 	while (true)
@@ -186,119 +141,13 @@ void RUDPServerCore::StartThreads()
 
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
-		logicThreadList.emplace_back([this, i]() { this->RunLogicThread(i); });
+		logicThreadList.emplace_back([this, i]() { this->RunIOWorkerThread(i); });
 	}
 
 	for (unsigned short i = 0; i < ioThreadCount; ++i)
 	{
-		ioThreadList.emplace_back([this, i]() { this->RunWorkerThread(i); });
+		ioThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
 	}
-}
-
-ULONG RUDPServerCore::RIODequeueCompletion(RIO_CQ& rioCQ, RIORESULT* rioResults)
-{
-	ULONG numOfResults = rioFunctionTable.RIODequeueCompletion(rioCQ, rioResults, rioMaxResultsSize);
-	if (numOfResults == RIO_CORRUPT_CQ)
-	{
-		std::cout << "RIODequeueCompletion failed with error " << WSAGetLastError() << std::endl;
-		g_Dump.Crash();
-	}
-
-	return numOfResults;
-}
-
-bool RUDPServerCore::InitializeRIO()
-{
-	GUID functionTableId = WSAID_MULTIPLE_RIO;
-	DWORD bytes = 0;
-
-	if (WSAIoctl(sock
-		, SIO_GET_MULTIPLE_EXTENSION_FUNCTION_POINTER
-		, &functionTableId
-		, sizeof(GUID)
-		, reinterpret_cast<void**>(&rioFunctionTable)
-		, sizeof(rioFunctionTable)
-		, &bytes
-		, NULL
-		, NULL))
-	{
-		std::cout << "InitializeRIO failed " << WSAGetLastError() << std::endl;
-		return false;
-	}
-
-	rioCQList.reserve(ioThreadCount);
-	for (int i = 0; i < ioThreadCount; ++i)
-	{
-		rioCQList.emplace_back(rioFunctionTable.RIOCreateCompletionQueue(rioCQSize, nullptr));
-		if (rioCQList[i] == RIO_INVALID_CQ)
-		{
-			std::cout << "RIOCreateCompletionQueue failed with error " << WSAGetLastError() << std::endl;
-			return false;
-		}
-
-		rioRQList.emplace_back(rioFunctionTable.RIOCreateRequestQueue(sock
-		, rioMaxOutstadingReceive
-		, rioReceiveDataBuffer
-		, rioMaxOutStandingSend
-		, rioMaxSendDataBuffers
-		, rioCQList[i]
-		, rioCQList[i]
-		, NULL));
-		if (rioRQList[i] == RIO_INVALID_RQ)
-		{
-			std::cout << "RioCreateRequestQueue failed with error " << WSAGetLastError() << std::endl;
-			return false;
-		}
-	}
-
-	return true;
-}
-
-std::optional<IOContextResult> RUDPServerCore::GetIOCompletedContext(unsigned short threadId, RIORESULT& rioResult)
-{
-	IOContext* context = reinterpret_cast<IOContext*>(rioResult.RequestContext);
-	if (context == nullptr)
-	{
-		return std::nullopt;
-	}
-
-	IOContextResult result;
-	{
-		auto session = GetSession(threadId, context->ownerIP);
-		if (session == nullptr)
-		{
-			contextPool.Free(context);
-			return std::nullopt;
-		}
-		result.session = session;
-	}
-
-	if (rioResult.BytesTransferred == 0 || result.session->ioCancle == true)
-	{
-		contextPool.Free(context);
-		return std::nullopt;
-	}
-
-	result.ioContext = context;
-	return result;
-}
-
-IO_POST_ERROR RUDPServerCore::PostIOCompleted(IOContext& context, ULONG transferred, std::shared_ptr<RUDPSession> session, unsigned short threadId)
-{
-	if (context.ioType == RIO_OPERATION_TYPE::OP_RECV)
-	{
-		//return RecvIOCompleted(transferred, session, threadId);
-	}
-	else if (context.ioType == RIO_OPERATION_TYPE::OP_SEND)
-	{
-		//return SendIOCompleted(transferred, session, threadId);
-	}
-	else
-	{
-		//InvalidIOCompleted(context);
-	}
-
-	return IO_POST_ERROR::INVALID_OPERATION_TYPE;
 }
 
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId, const std::string_view& ownerIP)
