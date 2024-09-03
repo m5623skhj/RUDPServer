@@ -77,7 +77,7 @@ bool RUDPServerCore::InitNetwork()
 		return false;
 	}
 
-	this->sock = WSASocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, 0, WSA_FLAG_REGISTERED_IO);
+	this->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sock == INVALID_SOCKET)
 	{
 		std::cout << "socket create failed " << WSAGetLastError() << std::endl;
