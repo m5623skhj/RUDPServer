@@ -127,8 +127,10 @@ void RUDPServerCore::RunIORecvWorkerThread()
 			}
 		} while (false);
 
-		// clientAddr에서 IP를 확인하고 해당하는 스레드 번호 생성
-		// 다른 logic 스레드로 버퍼 전달
+		uint32_t logicThreadId = clientAddr.sin_addr.S_un.S_addr % logicThreadCount;
+		
+		recvBufferStoreList[logicThreadId].Enqueue(buffer);
+		SetEvent(logicThreadEventHandleList[logicThreadId]);
 	}
 }
 
@@ -157,10 +159,12 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 
 void RUDPServerCore::StartThreads()
 {
+	recvBufferStoreList.reserve(logicThreadCount);
 	logicThreadList.reserve(logicThreadCount);
 
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
+		recvBufferStoreList.emplace_back(CListBaseQueue<NetBuffer*>());
 		logicThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
 	}
 

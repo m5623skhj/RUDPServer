@@ -6,6 +6,8 @@
 #include "EnumType.h"
 #include <shared_mutex>
 #include <unordered_map>
+#include "Queue.h"
+#include "NetServerSerializeBuffer.h"
 
 class RUDPSession;
 
@@ -44,6 +46,7 @@ private:
 private:
 	std::thread recvThread;
 	std::vector<std::thread> logicThreadList;
+	std::vector<CListBaseQueue<NetBuffer*>> recvBufferStoreList;
 	unsigned short logicThreadCount{};
 
 	std::vector<HANDLE> logicThreadEventHandleList;
