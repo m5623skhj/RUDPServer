@@ -127,10 +127,7 @@ void RUDPServerCore::RunIORecvWorkerThread()
 			}
 		} while (false);
 
-		uint32_t logicThreadId = clientAddr.sin_addr.S_un.S_addr % logicThreadCount;
-		
-		recvBufferStoreList[logicThreadId].Enqueue(buffer);
-		SetEvent(logicThreadEventHandleList[logicThreadId]);
+		SendToLogicThread(clientAddr, buffer);
 	}
 }
 
@@ -164,11 +161,19 @@ void RUDPServerCore::StartThreads()
 
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
-		recvBufferStoreList.emplace_back(CListBaseQueue<NetBuffer*>());
+		recvBufferStoreList.emplace_back(CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>());
 		logicThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
 	}
 
 	recvThread = std::thread([this]() {this->RunIORecvWorkerThread(); });
+}
+
+void RUDPServerCore::SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer)
+{
+	const uint32_t logicThreadId = clientAddr.sin_addr.S_un.S_addr % logicThreadCount;
+
+	recvBufferStoreList[logicThreadId].Enqueue(std::move(std::make_pair(clientAddr, buffer)));
+	SetEvent(logicThreadEventHandleList[logicThreadId]);
 }
 
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId, const std::string_view& ownerIP)

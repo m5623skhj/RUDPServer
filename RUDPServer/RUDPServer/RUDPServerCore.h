@@ -35,6 +35,7 @@ public:
 
 private:
 	void StartThreads();
+	inline void SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer);
 
 private:
 	struct TickSet
@@ -46,7 +47,7 @@ private:
 private:
 	std::thread recvThread;
 	std::vector<std::thread> logicThreadList;
-	std::vector<CListBaseQueue<NetBuffer*>> recvBufferStoreList;
+	std::vector<CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>> recvBufferStoreList;
 	unsigned short logicThreadCount{};
 
 	std::vector<HANDLE> logicThreadEventHandleList;
