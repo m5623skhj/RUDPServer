@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include "Queue.h"
 #include "NetServerSerializeBuffer.h"
+#include "CoreType.h"
 
 class RUDPSession;
 
@@ -59,12 +60,15 @@ private:
 #pragma endregion threads
 
 #pragma region Session
+public:
+	FORCEINLINE SessionId MakeSessionKeyFromIPAndPort(unsigned int ip, unsigned short port);
+
 private:
-	std::shared_ptr<RUDPSession> GetSession(unsigned short threadId, const std::string_view& ownerIP);
+	std::shared_ptr<RUDPSession> GetSession(const SOCKADDR_IN& clientAddr);
 	FORCEINLINE bool ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession);
 
 private:
-	std::vector<std::unique_ptr<std::shared_mutex>> sessionMapLock;
-	std::vector<std::unordered_map<std::string_view, std::shared_ptr<RUDPSession>>> sessionMap;
+	std::shared_mutex sessionMapLock;
+	std::unordered_map<UINT64, std::shared_ptr<RUDPSession>> sessionMap;
 #pragma endregion Session
 };

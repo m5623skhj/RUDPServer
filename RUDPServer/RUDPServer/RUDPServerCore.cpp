@@ -24,12 +24,11 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 		return false;
 	}
 
+	sessionMap.clear();
 	sessionMap.reserve(logicThreadCount);
 	logicThreadEventHandleList.reserve(logicThreadCount);
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
-		sessionMap.emplace_back();
-		sessionMapLock.emplace_back();
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 	}
 	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -176,12 +175,18 @@ void RUDPServerCore::SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffe
 	SetEvent(logicThreadEventHandleList[logicThreadId]);
 }
 
-std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId, const std::string_view& ownerIP)
+SessionId RUDPServerCore::MakeSessionKeyFromIPAndPort(unsigned int ip, unsigned short port)
 {
-	std::shared_lock lock(*sessionMapLock[threadId]);
+	return (static_cast<SessionId>(port) << 32) | ip;
+}
 
-	auto iter = sessionMap[threadId].find(ownerIP);
-	if (iter == sessionMap[threadId].end())
+std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const SOCKADDR_IN& clientAddr)
+{
+	SessionId sessionKey = MakeSessionKeyFromIPAndPort(clientAddr.sin_addr.S_un.S_addr, clientAddr.sin_port);
+	std::shared_lock lock(sessionMapLock);
+
+	auto iter = sessionMap.find(sessionKey);
+	if (iter == sessionMap.end())
 	{
 		return nullptr;
 	}
@@ -192,8 +197,8 @@ std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(unsigned short threadId,
 bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession)
 {
 	{
-		std::unique_lock<std::shared_mutex> lock(*sessionMapLock[threadId]);
-		sessionMap[threadId].erase(releaseSession.ownerIP);
+		std::unique_lock<std::shared_mutex> lock(sessionMapLock);
+		sessionMap.erase(releaseSession.sessionKey);
 	}
 	releaseSession.OnSessionReleased();
 

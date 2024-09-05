@@ -79,5 +79,6 @@ private:
 
 private:
 	bool ioCancle{};
-	std::string ownerIP{};
+	SessionId sessionKey{};
+	SOCKADDR_IN clientAddr{};
 };
