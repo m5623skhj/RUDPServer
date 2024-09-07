@@ -132,12 +132,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\Desktop\Common\NetServerSerializeBuffer.cpp" />
+    <ClCompile Include="CoreUtil.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RUDPServerCore.cpp" />
     <ClCompile Include="RUDPSession.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BuildConfig.h" />
+    <ClInclude Include="CoreUtil.h" />
     <ClInclude Include="EnumType.h" />
     <ClInclude Include="RUDPServerCore.h" />
     <ClInclude Include="RUDPSession.h" />

@@ -9,6 +9,7 @@
 #include "Queue.h"
 #include "NetServerSerializeBuffer.h"
 #include "CoreType.h"
+#include <list>
 
 class RUDPSession;
 
@@ -19,10 +20,12 @@ private:
 	virtual ~RUDPServerCore() = default;
 
 public:
+	[[nodiscard]]
 	bool StartServer(const std::wstring_view& optionFilePath);
 	void StopServer();
 
 private:
+	[[nodiscard]]
 	bool InitNetwork();
 
 private:
@@ -32,7 +35,11 @@ private:
 #pragma region threads
 public:
 	void RunIORecvWorkerThread();
+	void RunRetransmissionCheckerThread(unsigned short inThreadId);
 	void RunLogicWorkerThread(unsigned short inThreadId);
+
+public:
+	FORCEINLINE uint32_t GetLogicThreadId(uint32_t clientAddr);
 
 private:
 	void StartThreads();
@@ -47,6 +54,7 @@ private:
 
 private:
 	std::thread recvThread;
+	std::vector<std::thread> retransmissionCheckerThreadList;
 	std::vector<std::thread> logicThreadList;
 	std::vector<CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>> recvBufferStoreList;
 	unsigned short logicThreadCount{};
@@ -60,9 +68,6 @@ private:
 #pragma endregion threads
 
 #pragma region Session
-public:
-	FORCEINLINE SessionId MakeSessionKeyFromIPAndPort(unsigned int ip, unsigned short port);
-
 private:
 	std::shared_ptr<RUDPSession> GetSession(const SOCKADDR_IN& clientAddr);
 	FORCEINLINE bool ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession);
@@ -70,5 +75,8 @@ private:
 private:
 	std::shared_mutex sessionMapLock;
 	std::unordered_map<UINT64, std::shared_ptr<RUDPSession>> sessionMap;
+
+	std::vector<std::recursive_mutex> timeoutSessionListLock;
+	std::vector<std::list<UINT64>> timeoutSessionList;
 #pragma endregion Session
 };

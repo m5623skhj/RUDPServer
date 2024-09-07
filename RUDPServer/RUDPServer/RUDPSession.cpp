@@ -1,6 +1,7 @@
 #pragma once
 #include "PreCompile.h"
 #include "RUDPSession.h"
+#include "CoreUtil.h"
 
 SendPacketSequeceManager::SendPacketSequeceManager()
 {
@@ -9,55 +10,32 @@ SendPacketSequeceManager::SendPacketSequeceManager()
 
 void SendPacketSequeceManager::Initialize()
 {
-	for (auto& iter : sequenceManager)
+	for (auto iter : sequenceManager)
 	{
-		for (auto& innerIter : iter.second)
-		{
-			NetBuffer::Free(innerIter.second.buffer);
-		}
-
-		iter.second.clear();
+		NetBuffer::Free(iter.second.buffer);
 	}
 
 	sequenceManager.clear();
 }
 
-RecvPacketSequenceManager::RecvPacketSequenceManager()
-{
-	Initialize();
-}
-
-void RecvPacketSequenceManager::Initialize()
-{
-	for (auto& iter : sequenceManager)
-	{
-		for (auto& innerIter : iter.second)
-		{
-			NetBuffer::Free(innerIter.second.buffer);
-		}
-
-		iter.second.clear();
-	}
-
-	sequenceManager.clear();
-}
-
-RUDPSession::RUDPSession()
+RUDPSession::RUDPSession(SessionId inSessionId)
 {
 	sendPacketSequenceManager.Initialize();
+	sessionId = inSessionId;
+	clientAddr = RUDPCoreUtil::MakeAddressInfoFromSessionId(sessionId);
 }
 
 void RUDPSession::OnTick()
 {
-	CheckAndRetransmitPacket();
+	CheckAndRetransmissionPacket();
 }
 
-void RUDPSession::CheckAndRetransmitPacket()
+void RUDPSession::CheckAndRetransmissionPacket()
 {
 
 }
 
-bool RUDPSession::CheckMaxRetransmitCount(PacketRetransmissionCount retransmissionCount)
+bool RUDPSession::CheckMaxRetransmissionCount(PacketRetransmissionCount retransmissionCount)
 {
 	return maxPacketRetransmissionCount <= retransmissionCount;
 }

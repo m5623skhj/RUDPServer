@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\..\..\..\Desktop\Common\NetServerSerializeBuffer.cpp">
       <Filter>소스 파일\lib</Filter>
     </ClCompile>
+    <ClCompile Include="CoreUtil.cpp">
+      <Filter>소스 파일\RUDPCore</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RUDPServerCore.h">
@@ -52,6 +55,9 @@
     </ClInclude>
     <ClInclude Include="EnumType.h">
       <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreUtil.h">
+      <Filter>소스 파일\RUDPCore</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

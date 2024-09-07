@@ -7,6 +7,7 @@
 #include "EnumType.h"
 #include "RUDPSession.h"
 #include <shared_mutex>
+#include "CoreUtil.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -130,6 +131,14 @@ void RUDPServerCore::RunIORecvWorkerThread()
 	}
 }
 
+void RUDPServerCore::RunRetransmissionCheckerThread(unsigned short inThreadId)
+{
+	while (threadStopFlag == false)
+	{
+
+	}
+}
+
 void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 {
 	HANDLE eventHandleList[2] = {logicThreadEventHandleList[inThreadId], logicThreadEventStopHandle};
@@ -153,6 +162,11 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 	}
 }
 
+uint32_t RUDPServerCore::GetLogicThreadId(uint32_t clientAddr)
+{
+	return clientAddr % logicThreadCount;
+}
+
 void RUDPServerCore::StartThreads()
 {
 	recvBufferStoreList.reserve(logicThreadCount);
@@ -169,20 +183,14 @@ void RUDPServerCore::StartThreads()
 
 void RUDPServerCore::SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer)
 {
-	const uint32_t logicThreadId = clientAddr.sin_addr.S_un.S_addr % logicThreadCount;
+	const uint32_t logicThreadId = GetLogicThreadId(clientAddr.sin_addr.S_un.S_addr);
 
 	recvBufferStoreList[logicThreadId].Enqueue(std::move(std::make_pair(clientAddr, buffer)));
 	SetEvent(logicThreadEventHandleList[logicThreadId]);
 }
-
-SessionId RUDPServerCore::MakeSessionKeyFromIPAndPort(unsigned int ip, unsigned short port)
-{
-	return (static_cast<SessionId>(port) << 32) | ip;
-}
-
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const SOCKADDR_IN& clientAddr)
 {
-	SessionId sessionKey = MakeSessionKeyFromIPAndPort(clientAddr.sin_addr.S_un.S_addr, clientAddr.sin_port);
+	SessionId sessionKey = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(clientAddr.sin_addr.S_un.S_addr, clientAddr.sin_port);
 	std::shared_lock lock(sessionMapLock);
 
 	auto iter = sessionMap.find(sessionKey);
@@ -198,7 +206,7 @@ bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& re
 {
 	{
 		std::unique_lock<std::shared_mutex> lock(sessionMapLock);
-		sessionMap.erase(releaseSession.sessionKey);
+		sessionMap.erase(releaseSession.sessionId);
 	}
 	releaseSession.OnSessionReleased();
 
