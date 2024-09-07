@@ -59,5 +59,8 @@
     <ClInclude Include="CoreUtil.h">
       <Filter>소스 파일\RUDPCore</Filter>
     </ClInclude>
+    <ClInclude Include="CoreStruct.h">
+      <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

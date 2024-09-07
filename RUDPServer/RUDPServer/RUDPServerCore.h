@@ -10,6 +10,7 @@
 #include "NetServerSerializeBuffer.h"
 #include "CoreType.h"
 #include <list>
+#include "CoreStruct.h"
 
 class RUDPSession;
 
@@ -35,7 +36,7 @@ private:
 #pragma region threads
 public:
 	void RunIORecvWorkerThread();
-	void RunRetransmissionCheckerThread(unsigned short inThreadId);
+	void RunRetransmissionThread(unsigned short inThreadId);
 	void RunLogicWorkerThread(unsigned short inThreadId);
 
 public:
@@ -54,7 +55,7 @@ private:
 
 private:
 	std::thread recvThread;
-	std::vector<std::thread> retransmissionCheckerThreadList;
+	std::vector<std::thread> retransmissionThreadList;
 	std::vector<std::thread> logicThreadList;
 	std::vector<CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>> recvBufferStoreList;
 	unsigned short logicThreadCount{};
@@ -75,8 +76,14 @@ private:
 private:
 	std::shared_mutex sessionMapLock;
 	std::unordered_map<UINT64, std::shared_ptr<RUDPSession>> sessionMap;
-
-	std::vector<std::recursive_mutex> timeoutSessionListLock;
-	std::vector<std::list<UINT64>> timeoutSessionList;
 #pragma endregion Session
+
+#pragma region Send
+public:
+	void SendPacketTo();
+
+private:
+	std::vector<std::list<SendPacketInfo>> sendList;
+	std::vector<std::unique_ptr<std::recursive_mutex>> sendListLock;
+#pragma endregion Send
 };

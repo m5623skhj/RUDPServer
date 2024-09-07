@@ -139,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BuildConfig.h" />
+    <ClInclude Include="CoreStruct.h" />
     <ClInclude Include="CoreUtil.h" />
     <ClInclude Include="EnumType.h" />
     <ClInclude Include="RUDPServerCore.h" />

@@ -1,18 +1,8 @@
 #pragma once
-#include "CoreType.h"
 #include <unordered_map>
-#include <chrono>
-#include "NetServerSerializeBuffer.h"
+#include "CoreStruct.h"
 
 class RUDPServerCore;
-
-struct SendPacketInfo
-{
-	bool isSendedPacket{};
-	std::chrono::time_point<std::chrono::steady_clock> timestamp{};
-	PacketRetransmissionCount retransmissionCount{};
-	NetBuffer* buffer{};
-};
 
 class SendPacketSequeceManager final
 {

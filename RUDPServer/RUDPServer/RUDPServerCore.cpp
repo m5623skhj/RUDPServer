@@ -26,10 +26,15 @@ bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
 	}
 
 	sessionMap.clear();
+	sendList.clear();
+
 	sessionMap.reserve(logicThreadCount);
+	sendList.reserve(logicThreadCount);
 	logicThreadEventHandleList.reserve(logicThreadCount);
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
+		sendList.emplace_back();
+		sendListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 	}
 	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -131,11 +136,16 @@ void RUDPServerCore::RunIORecvWorkerThread()
 	}
 }
 
-void RUDPServerCore::RunRetransmissionCheckerThread(unsigned short inThreadId)
+void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 {
+	std::chrono::time_point now = std::chrono::steady_clock::now();
 	while (threadStopFlag == false)
 	{
+		now = std::chrono::steady_clock::now();
 
+#if USE_RETRANSMISSION_SLEEP
+		Sleep(RetransmissionCheckTime);
+#endif
 	}
 }
 
@@ -211,4 +221,9 @@ bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& re
 	releaseSession.OnSessionReleased();
 
 	return true;
+}
+
+void RUDPServerCore::SendPacketTo()
+{
+
 }
