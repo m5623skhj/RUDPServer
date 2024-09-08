@@ -147,6 +147,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 	while (threadStopFlag == false)
 	{
 		now = std::chrono::steady_clock::now();
+		size_t sendedListSize = sendedList.size();
 		restSize = thisThreadSendList.GetRestSize();
 		SendPacketInfo* sendPacketInfo;
 
@@ -170,6 +171,18 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 
 			sendedList.push_back(sendPacketInfo);
 			--restSize;
+		}
+
+		while (sendedListSize)
+		{
+			// check is sended
+			// if sened then
+			// erase
+			// else 
+			// if retransmission count bigger than max retransmission count
+			// dis connect target session id
+			// else
+			// retransmission and add count
 		}
 #if USE_RETRANSMISSION_SLEEP
 		Sleep(RetransmissionCheckTime);
