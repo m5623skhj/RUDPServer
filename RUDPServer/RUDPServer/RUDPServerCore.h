@@ -80,10 +80,10 @@ private:
 
 #pragma region Send
 public:
-	void SendPacketTo();
+	void SendPacketTo(const SendPacketInfo& sendPacketInfo);
 
 private:
-	std::vector<std::list<SendPacketInfo>> sendList;
+	std::vector<CListBaseQueue<SendPacketInfo>> sendList;
 	std::vector<std::unique_ptr<std::recursive_mutex>> sendListLock;
 #pragma endregion Send
 };

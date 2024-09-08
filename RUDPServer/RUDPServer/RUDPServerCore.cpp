@@ -223,7 +223,10 @@ bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& re
 	return true;
 }
 
-void RUDPServerCore::SendPacketTo()
+void RUDPServerCore::SendPacketTo(const SendPacketInfo& sendPacketInfo)
 {
-
+	uint32_t threadId = RUDPCoreUtil::MakeIPFromSessionId(sendPacketInfo.GetSendTarget());
+	
+	std::scoped_lock lock(*sendListLock[threadId]);
+	sendList[threadId].Enqueue(sendPacketInfo);
 }

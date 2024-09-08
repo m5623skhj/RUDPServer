@@ -2,6 +2,7 @@
 #include "PreCompile.h"
 #include "RUDPSession.h"
 #include "CoreUtil.h"
+#include <ranges>
 
 SendPacketSequeceManager::SendPacketSequeceManager()
 {
@@ -10,9 +11,9 @@ SendPacketSequeceManager::SendPacketSequeceManager()
 
 void SendPacketSequeceManager::Initialize()
 {
-	for (auto iter : sequenceManager)
+	for (auto& value : sequenceManager | std::views::values)
 	{
-		NetBuffer::Free(iter.second.buffer);
+		value.FreeBuffer();
 	}
 
 	sequenceManager.clear();
