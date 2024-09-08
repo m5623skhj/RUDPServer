@@ -86,5 +86,6 @@ public:
 private:
 	std::vector<CListBaseQueue<SendPacketInfo*>> sendList;
 	std::vector<std::unique_ptr<std::recursive_mutex>> sendListLock;
+	
 #pragma endregion Send
 };
