@@ -11,6 +11,7 @@
 #include "CoreType.h"
 #include <list>
 #include "CoreStruct.h"
+#include "LockFreeMemoryPool.h"
 
 class RUDPSession;
 
@@ -80,10 +81,10 @@ private:
 
 #pragma region Send
 public:
-	void SendPacketTo(const SendPacketInfo& sendPacketInfo);
+	void SendPacketTo(SendPacketInfo* sendPacketInfo);
 
 private:
-	std::vector<CListBaseQueue<SendPacketInfo>> sendList;
+	std::vector<CListBaseQueue<SendPacketInfo*>> sendList;
 	std::vector<std::unique_ptr<std::recursive_mutex>> sendListLock;
 #pragma endregion Send
 };

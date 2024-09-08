@@ -7,6 +7,7 @@
 #include "EnumType.h"
 #include "RUDPSession.h"
 #include <shared_mutex>
+#include <ranges>
 #include "CoreUtil.h"
 
 #pragma comment(lib, "ws2_32.lib")
@@ -139,10 +140,37 @@ void RUDPServerCore::RunIORecvWorkerThread()
 void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 {
 	std::chrono::time_point now = std::chrono::steady_clock::now();
+	int restSize = 0;
+	auto& thisThreadSendList = sendList[inThreadId];
+	std::list<SendPacketInfo*> sendedList;
+
 	while (threadStopFlag == false)
 	{
 		now = std::chrono::steady_clock::now();
+		restSize = thisThreadSendList.GetRestSize();
+		SendPacketInfo* sendPacketInfo;
 
+		while (restSize > 0)
+		{
+			sendPacketInfo = nullptr;
+			if (thisThreadSendList.Dequeue(&sendPacketInfo) == false)
+			{
+				std::cout << "Send list Dequeue() failed" << std::endl;
+				g_Dump.Crash();
+			}
+
+			auto targetAddress = RUDPCoreUtil::MakeAddressInfoFromSessionId(sendPacketInfo->GetSendTarget());
+			auto buffer = sendPacketInfo->GetBuffer();
+			sendto(sock
+				, buffer->GetReadBufferPtr()
+				, buffer->GetUseSize()
+				, NULL
+				, (sockaddr*)(&targetAddress)
+				, sizeof(sockaddr_in));
+
+			sendedList.push_back(sendPacketInfo);
+			--restSize;
+		}
 #if USE_RETRANSMISSION_SLEEP
 		Sleep(RetransmissionCheckTime);
 #endif
@@ -223,9 +251,9 @@ bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& re
 	return true;
 }
 
-void RUDPServerCore::SendPacketTo(const SendPacketInfo& sendPacketInfo)
+void RUDPServerCore::SendPacketTo(SendPacketInfo* sendPacketInfo)
 {
-	uint32_t threadId = RUDPCoreUtil::MakeIPFromSessionId(sendPacketInfo.GetSendTarget());
+	uint32_t threadId = RUDPCoreUtil::MakeIPFromSessionId(sendPacketInfo->GetSendTarget());
 	
 	std::scoped_lock lock(*sendListLock[threadId]);
 	sendList[threadId].Enqueue(sendPacketInfo);
