@@ -25,6 +25,7 @@ public:
 
 	SessionId GetSendOwner() const { return sendOwner; }
 	SessionId GetSendTarget() const { return sendTargetId; }
+	NetBuffer* GetBuffer() { return buffer; }
 
 public:
 	bool isSendedPacket{};
@@ -38,3 +39,5 @@ private:
 	SessionId sendTargetId{};
 	NetBuffer* buffer{};
 };
+
+CTLSMemoryPool<SendPacketInfo>* sendPacketInfoPool = new CTLSMemoryPool<SendPacketInfo>(4, false);
