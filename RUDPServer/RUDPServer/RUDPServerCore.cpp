@@ -149,41 +149,10 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 		now = std::chrono::steady_clock::now();
 		size_t sendedListSize = sendedList.size();
 		restSize = thisThreadSendList.GetRestSize();
-		SendPacketInfo* sendPacketInfo;
 
-		while (restSize > 0)
-		{
-			sendPacketInfo = nullptr;
-			if (thisThreadSendList.Dequeue(&sendPacketInfo) == false)
-			{
-				std::cout << "Send list Dequeue() failed" << std::endl;
-				g_Dump.Crash();
-			}
+		SendTo(restSize, thisThreadSendList, sendedList);
+		CheckSendedList(sendedListSize, sendedList);
 
-			auto targetAddress = RUDPCoreUtil::MakeAddressInfoFromSessionId(sendPacketInfo->GetSendTarget());
-			auto buffer = sendPacketInfo->GetBuffer();
-			sendto(sock
-				, buffer->GetReadBufferPtr()
-				, buffer->GetUseSize()
-				, NULL
-				, (sockaddr*)(&targetAddress)
-				, sizeof(sockaddr_in));
-
-			sendedList.push_back(sendPacketInfo);
-			--restSize;
-		}
-
-		while (sendedListSize)
-		{
-			// check is sended
-			// if sened then
-			// erase
-			// else 
-			// if retransmission count bigger than max retransmission count
-			// dis connect target session id
-			// else
-			// retransmission and add count
-		}
 #if USE_RETRANSMISSION_SLEEP
 		Sleep(RetransmissionCheckTime);
 #endif
@@ -239,6 +208,56 @@ void RUDPServerCore::SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffe
 	recvBufferStoreList[logicThreadId].Enqueue(std::move(std::make_pair(clientAddr, buffer)));
 	SetEvent(logicThreadEventHandleList[logicThreadId]);
 }
+
+void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList)
+{
+	SendPacketInfo* sendPacketInfo;
+
+	while (restSize > 0)
+	{
+		sendPacketInfo = nullptr;
+		if (sendList.Dequeue(&sendPacketInfo) == false)
+		{
+			std::cout << "Send list Dequeue() failed" << std::endl;
+			g_Dump.Crash();
+		}
+
+		auto targetAddress = RUDPCoreUtil::MakeAddressInfoFromSessionId(sendPacketInfo->GetSendTarget());
+		auto buffer = sendPacketInfo->GetBuffer();
+		sendto(sock
+			, buffer->GetReadBufferPtr()
+			, buffer->GetUseSize()
+			, NULL
+			, (sockaddr*)(&targetAddress)
+			, sizeof(sockaddr_in));
+
+		sendedList.push_back(sendPacketInfo);
+		--restSize;
+	}
+}
+
+void RUDPServerCore::CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList)
+{
+	for (auto itor : sendList)
+	{
+		if (checkSize <= 0)
+		{
+			return;
+		}
+
+		// check is sended
+		// if sened then
+		// erase
+		// else 
+		// if retransmission count bigger than max retransmission count
+		// dis connect target session id
+		// else
+		// retransmission and add count
+
+		--checkSize;
+	}
+}
+
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const SOCKADDR_IN& clientAddr)
 {
 	SessionId sessionKey = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(clientAddr.sin_addr.S_un.S_addr, clientAddr.sin_port);

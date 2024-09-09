@@ -40,4 +40,4 @@ private:
 	NetBuffer* buffer{};
 };
 
-CTLSMemoryPool<SendPacketInfo>* sendPacketInfoPool = new CTLSMemoryPool<SendPacketInfo>(4, false);
+static CTLSMemoryPool<SendPacketInfo>* sendPacketInfoPool = new CTLSMemoryPool<SendPacketInfo>(4, false);

@@ -48,6 +48,10 @@ private:
 	inline void SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer);
 
 private:
+	void SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList);
+	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList);
+
+private:
 	struct TickSet
 	{
 		UINT64 nowTick = 0;
