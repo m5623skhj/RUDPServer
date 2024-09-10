@@ -12,6 +12,7 @@
 #include <list>
 #include "CoreStruct.h"
 #include "LockFreeMemoryPool.h"
+#include <unordered_set>
 
 class RUDPSession;
 
@@ -49,7 +50,8 @@ private:
 
 private:
 	void SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList);
-	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList);
+	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionSet);
+	void FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo);
 
 private:
 	struct TickSet

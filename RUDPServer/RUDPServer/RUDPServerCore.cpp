@@ -143,6 +143,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 	int restSize = 0;
 	auto& thisThreadSendList = sendList[inThreadId];
 	std::list<SendPacketInfo*> sendedList;
+	std::unordered_set<SessionId> thisThreadDeletedSession;
 
 	while (threadStopFlag == false)
 	{
@@ -151,7 +152,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 		restSize = thisThreadSendList.GetRestSize();
 
 		SendTo(restSize, thisThreadSendList, sendedList);
-		CheckSendedList(sendedListSize, sendedList);
+		CheckSendedList(sendedListSize, sendedList, thisThreadDeletedSession);
 
 #if USE_RETRANSMISSION_SLEEP
 		Sleep(RetransmissionCheckTime);
@@ -236,26 +237,54 @@ void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendL
 	}
 }
 
-void RUDPServerCore::CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList)
+void RUDPServerCore::CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionSet)
 {
-	for (auto itor : sendList)
+	auto itor = sendedList.begin();
+	auto end = sendedList.end();
+	while (itor != end)
 	{
 		if (checkSize <= 0)
 		{
 			return;
 		}
-
-		// check is sended
-		// if sened then
-		// erase
-		// else 
-		// if retransmission count bigger than max retransmission count
-		// dis connect target session id
-		// else
-		// retransmission and add count
-
 		--checkSize;
+
+		auto& sendedItem = *itor;
+		if (sendedItem == nullptr)
+		{
+			g_Dump.Crash();
+			return;
+		}
+
+		SessionId targetSessionId = sendedItem->GetSendTarget();
+		if (deletedSessionSet.find(targetSessionId) != deletedSessionSet.end())
+		{
+			FreeToSendedItem(*itor);
+			itor = sendedList.erase(itor);
+			deletedSessionSet.erase(targetSessionId);
+			continue;
+		}
+
+		if (not sendedItem->isSendedPacket)
+		{
+			if (sendedItem->retransmissionCount >= maxPacketRetransmissionCount)
+			{
+				deletedSessionSet.insert(targetSessionId);
+			}
+			else
+			{
+				SendPacketTo(sendedItem);
+			}
+		}
+
+		itor = sendedList.erase(itor);
 	}
+}
+
+void RUDPServerCore::FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo)
+{
+	NetBuffer::Free(freeTargetSendPacketInfo->GetBuffer());
+	sendPacketInfoPool->Free(freeTargetSendPacketInfo);
 }
 
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const SOCKADDR_IN& clientAddr)
@@ -285,6 +314,7 @@ bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& re
 
 void RUDPServerCore::SendPacketTo(SendPacketInfo* sendPacketInfo)
 {
+	++sendPacketInfo->retransmissionCount;
 	uint32_t threadId = RUDPCoreUtil::MakeIPFromSessionId(sendPacketInfo->GetSendTarget());
 	
 	std::scoped_lock lock(*sendListLock[threadId]);
