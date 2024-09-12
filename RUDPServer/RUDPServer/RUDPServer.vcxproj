@@ -134,6 +134,7 @@
     <ClCompile Include="..\..\..\..\..\Desktop\Common\NetServerSerializeBuffer.cpp" />
     <ClCompile Include="CoreUtil.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PacketManager.cpp" />
     <ClCompile Include="RUDPServerCore.cpp" />
     <ClCompile Include="RUDPSession.cpp" />
   </ItemGroup>
@@ -142,6 +143,7 @@
     <ClInclude Include="CoreStruct.h" />
     <ClInclude Include="CoreUtil.h" />
     <ClInclude Include="EnumType.h" />
+    <ClInclude Include="PacketManager.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RUDPServerCore.h" />
     <ClInclude Include="RUDPSession.h" />

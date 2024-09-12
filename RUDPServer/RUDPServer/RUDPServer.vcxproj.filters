@@ -25,6 +25,9 @@
     <Filter Include="소스 파일\Protocol">
       <UniqueIdentifier>{796ebcaf-6314-418d-93b9-e9523cf243de}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\PacketManager">
+      <UniqueIdentifier>{d60917a3-aef1-4114-9eb0-a4770b52b62f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -41,6 +44,9 @@
     </ClCompile>
     <ClCompile Include="CoreUtil.cpp">
       <Filter>소스 파일\RUDPCore</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketManager.cpp">
+      <Filter>소스 파일\PacketManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +73,9 @@
     </ClInclude>
     <ClInclude Include="Protocol.h">
       <Filter>소스 파일\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketManager.h">
+      <Filter>소스 파일\PacketManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
