@@ -22,6 +22,9 @@
     <Filter Include="소스 파일\RUDPCore\CoreTypes">
       <UniqueIdentifier>{5b37a268-ba22-451e-a5a8-fc586dbe0aa4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Protocol">
+      <UniqueIdentifier>{796ebcaf-6314-418d-93b9-e9523cf243de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -61,6 +64,9 @@
     </ClInclude>
     <ClInclude Include="CoreStruct.h">
       <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol.h">
+      <Filter>소스 파일\Protocol</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

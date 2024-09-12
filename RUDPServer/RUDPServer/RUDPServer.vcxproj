@@ -142,6 +142,7 @@
     <ClInclude Include="CoreStruct.h" />
     <ClInclude Include="CoreUtil.h" />
     <ClInclude Include="EnumType.h" />
+    <ClInclude Include="Protocol.h" />
     <ClInclude Include="RUDPServerCore.h" />
     <ClInclude Include="RUDPSession.h" />
     <ClInclude Include="CoreType.h" />
