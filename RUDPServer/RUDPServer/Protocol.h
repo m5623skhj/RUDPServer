@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include "CoreType.h"
+#include "EnumType.h"
 #include "NetServerSerializeBuffer.h"
 
 using PacketId = unsigned int;
@@ -50,6 +51,27 @@ virtual void PacketToBuffer(OUT NetBuffer& buffer) override { SetParametersToBuf
 #pragma endregion ForGameServerPacket
 
 ////////////////////////////////////////////////////////////////////////////////////
+// Packet
+////////////////////////////////////////////////////////////////////////////////////
+
+#pragma pack(push, 1)
+#pragma region GameServer
+class IPacket
+{
+public:
+	IPacket() = default;
+	virtual ~IPacket() = default;
+
+	virtual PacketId GetPacketId() const = 0;
+
+public:
+	virtual void BufferToPacket(OUT NetBuffer& buffer) { UNREFERENCED_PARAMETER(buffer); }
+	virtual void PacketToBuffer(OUT NetBuffer& buffer) { UNREFERENCED_PARAMETER(buffer); }
+};
+#pragma endregion GameServer
+#pragma pack(pop)
+
+////////////////////////////////////////////////////////////////////////////////////
 // Packet Register
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,8 +84,7 @@ virtual void PacketToBuffer(OUT NetBuffer& buffer) override { SetParametersToBuf
 #define DECLARE_HANDLE_PACKET(PacketType)\
 	static bool HandlePacket(RIOTestSession& session, PacketType& packet);\
 
-#define DECLARE_ALL_HANDLER(){\
-}
+#define DECLARE_ALL_HANDLER()\
 
 #define REGISTER_PACKET_LIST(){\
 }
