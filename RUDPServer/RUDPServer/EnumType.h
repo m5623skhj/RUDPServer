@@ -1,7 +1,8 @@
 #pragma once
 
-enum class IO_POST_ERROR : unsigned char
+enum class PACKET_ID : unsigned int
 {
-	SUCCESS = 0
-	, INVALID_OPERATION_TYPE
+	INVALID_PACKET = 0
+	, PING
+	, PONG
 };
