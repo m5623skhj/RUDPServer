@@ -168,7 +168,7 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 		const auto waitResult = WaitForMultipleObjects(2, eventHandleList, FALSE, INFINITE);
 		if (waitResult == WAIT_OBJECT_0)
 		{
-			// Logic
+			RecvFromClient(recvBufferStoreList[inThreadId]);
 		}
 		else if (waitResult == WAIT_OBJECT_0 + 1)
 		{
@@ -186,6 +186,42 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 uint32_t RUDPServerCore::GetLogicThreadId(uint32_t clientAddr)
 {
 	return clientAddr % logicThreadCount;
+}
+
+void RUDPServerCore::RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>& recvBufferList)
+{
+	while (recvBufferList.GetRestSize() > 0)
+	{
+		std::pair<SOCKADDR_IN, NetBuffer*> recvObject;
+		if (recvBufferList.Dequeue(&recvObject) == false)
+		{
+			return;
+		}
+
+		SessionId sessionId = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(recvObject.first.sin_addr.S_un.S_addr, recvObject.first.sin_port);
+		std::shared_ptr<RUDPSession> session;
+		do
+		{
+			std::shared_lock Lock(sessionMapLock);
+			auto itor = sessionMap.find(sessionId);
+			if (itor == sessionMap.end())
+			{
+				session = nullptr;
+				break;
+			}
+
+			session = itor->second;
+		} while (false);
+
+		if (session == nullptr)
+		{
+			std::unique_lock Lock(sessionMapLock);
+			session = std::make_shared<RUDPSession>(sessionId);
+			sessionMap.insert({ sessionId, session });
+		}
+
+
+	}
 }
 
 void RUDPServerCore::StartThreads()

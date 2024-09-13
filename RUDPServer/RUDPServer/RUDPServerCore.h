@@ -45,6 +45,9 @@ public:
 	FORCEINLINE uint32_t GetLogicThreadId(uint32_t clientAddr);
 
 private:
+	void RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>& recvBufferList);
+
+private:
 	void StartThreads();
 	inline void SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer);
 
