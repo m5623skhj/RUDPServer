@@ -296,7 +296,6 @@ void RUDPServerCore::CheckSendedList(size_t checkSize, std::list<SendPacketInfo*
 		{
 			FreeToSendedItem(*itor);
 			itor = sendedList.erase(itor);
-			deletedSessionSet.erase(targetSessionId);
 			continue;
 		}
 
