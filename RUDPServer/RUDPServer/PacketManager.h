@@ -6,9 +6,9 @@
 #include <unordered_map>
 #include "NetServerSerializeBuffer.h"
 
-class RIOTestSession;
+class RUDPSession;
 
-using PacketHandler = std::function<bool(RIOTestSession&, NetBuffer&, std::any&)>;
+using PacketHandler = std::function<bool(RUDPSession&, NetBuffer&, std::any&)>;
 
 class PacketManager
 {
@@ -46,7 +46,7 @@ public:
 	void RegisterPacketHandler()
 	{
 		static_assert(std::is_base_of<IPacket, PacketType>::value, "RegisterPacketHandler() : PacketType must inherit from IPacket");
-		auto handler = [](RIOTestSession& session, NetBuffer& buffer, std::any& packet)
+		auto handler = [](RUDPSession& session, NetBuffer& buffer, std::any& packet)
 		{
 			auto realPacket = static_cast<PacketType*>(std::any_cast<IPacket*>(packet));
 			realPacket->BufferToPacket(buffer);
