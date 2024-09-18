@@ -46,6 +46,8 @@ public:
 
 private:
 	void RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>& recvBufferList);
+	void MakePacket(std::shared_ptr<RUDPSession> session, NetBuffer& recvBuffer);
+	WORD GetPayloadLength(OUT NetBuffer& buffer);
 
 private:
 	void StartThreads();
@@ -57,7 +59,7 @@ private:
 	void FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo);
 
 private:
-	std::shared_ptr<RUDPSession> FindOrInsertSession();
+	std::shared_ptr<RUDPSession> FindOrInsertSession(SessionId inSessionId);
 
 private:
 	struct TickSet

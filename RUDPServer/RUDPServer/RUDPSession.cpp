@@ -3,6 +3,8 @@
 #include "RUDPSession.h"
 #include "CoreUtil.h"
 #include <ranges>
+#include "Protocol.h"
+#include "PacketManager.h"
 
 SendPacketSequeceManager::SendPacketSequeceManager()
 {
@@ -28,17 +30,29 @@ RUDPSession::RUDPSession(SessionId inSessionId)
 
 void RUDPSession::OnTick()
 {
-	CheckAndRetransmissionPacket();
-}
-
-void RUDPSession::CheckAndRetransmissionPacket()
-{
 
 }
 
-bool RUDPSession::CheckMaxRetransmissionCount(PacketRetransmissionCount retransmissionCount)
+void RUDPSession::OnRecvPacket(NetBuffer& recvPacket)
 {
-	return maxPacketRetransmissionCount <= retransmissionCount;
+	PacketId packetId;
+	recvPacket >> packetId;
+
+	auto packetHandler = PacketManager::GetInst().GetPacketHandler(packetId);
+	if (packetHandler == nullptr)
+	{
+		return;
+	}
+
+	auto packet = PacketManager::GetInst().MakePacket(packetId);
+	if (packet == nullptr)
+	{
+		return;
+	}
+
+	char* targetPtr = reinterpret_cast<char*>(packet.get()) + sizeof(char*);
+	std::any anyPacket = std::any(packet.get());
+	packetHandler(*this, recvPacket, anyPacket);
 }
 
 void RUDPSession::OnSessionReleased()

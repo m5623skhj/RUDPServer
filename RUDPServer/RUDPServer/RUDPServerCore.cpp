@@ -9,6 +9,7 @@
 #include <shared_mutex>
 #include <ranges>
 #include "CoreUtil.h"
+#include "PacketManager.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -118,7 +119,7 @@ void RUDPServerCore::RunIORecvWorkerThread()
 		do
 		{
 			recvSize = recvfrom(sock
-				, buffer->GetWriteBufferPtr()
+				, buffer->GetBufferPtr()
 				, buffer->GetFreeSize()
 				, NULL
 				, (SOCKADDR*)&clientAddr
@@ -133,6 +134,7 @@ void RUDPServerCore::RunIORecvWorkerThread()
 			}
 		} while (false);
 
+		buffer->MoveWritePos(recvSize);
 		SendToLogicThread(clientAddr, buffer);
 	}
 }
@@ -200,7 +202,38 @@ void RUDPServerCore::RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, Ne
 
 		SessionId sessionId = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(recvObject.first.sin_addr.S_un.S_addr, recvObject.first.sin_port);
 		std::shared_ptr<RUDPSession> session = FindOrInsertSession(sessionId);
+		MakePacket(session, *recvObject.second);
 	}
+}
+
+void RUDPServerCore::MakePacket(std::shared_ptr<RUDPSession> session, NetBuffer& recvBuffer)
+{
+	if (recvBuffer.GetUseSize() != GetPayloadLength(recvBuffer) || 
+		recvBuffer.Decode() == false)
+	{
+		// Delete session
+	}
+	else
+	{
+		session->OnRecvPacket(recvBuffer);
+	}
+
+	NetBuffer::Free(&recvBuffer);
+}
+
+WORD RUDPServerCore::GetPayloadLength(OUT NetBuffer& buffer)
+{
+	BYTE code;
+	WORD payloadLength;
+	buffer >> code >> payloadLength;
+
+	if (code != NetBuffer::m_byHeaderCode)
+	{
+		std::cout << "code : " << code << std::endl;
+		return 0;
+	}
+
+	return payloadLength;
 }
 
 std::shared_ptr<RUDPSession> RUDPServerCore::FindOrInsertSession(SessionId inSessionId)
@@ -261,8 +294,8 @@ void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendL
 		auto targetAddress = RUDPCoreUtil::MakeAddressInfoFromSessionId(sendPacketInfo->GetSendTarget());
 		auto buffer = sendPacketInfo->GetBuffer();
 		sendto(sock
-			, buffer->GetReadBufferPtr()
-			, buffer->GetUseSize()
+			, buffer->GetBufferPtr()
+			, buffer->GetUseSize() + df_HEADER_SIZE
 			, NULL
 			, (sockaddr*)(&targetAddress)
 			, sizeof(sockaddr_in));

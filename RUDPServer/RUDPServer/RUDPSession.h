@@ -31,11 +31,7 @@ public:
 	void OnTick();
 
 private:
-	void CheckAndRetransmissionPacket();
-	[[nodiscard]]
-	bool CheckMaxRetransmissionCount(PacketRetransmissionCount retransmissionCount);
-
-private:
+	void OnRecvPacket(NetBuffer& recvPacket);
 	void OnSessionReleased();
 
 private:
