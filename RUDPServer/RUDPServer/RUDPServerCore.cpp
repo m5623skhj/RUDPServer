@@ -199,28 +199,27 @@ void RUDPServerCore::RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, Ne
 		}
 
 		SessionId sessionId = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(recvObject.first.sin_addr.S_un.S_addr, recvObject.first.sin_port);
-		std::shared_ptr<RUDPSession> session;
-		do
-		{
-			std::shared_lock Lock(sessionMapLock);
-			auto itor = sessionMap.find(sessionId);
-			if (itor == sessionMap.end())
-			{
-				session = nullptr;
-				break;
-			}
+		std::shared_ptr<RUDPSession> session = FindOrInsertSession(sessionId);
+	}
+}
 
-			session = itor->second;
-		} while (false);
-
-		if (session == nullptr)
+std::shared_ptr<RUDPSession> RUDPServerCore::FindOrInsertSession(SessionId inSessionId)
+{
+	{
+		std::shared_lock Lock(sessionMapLock);
+		auto itor = sessionMap.find(inSessionId);
+		if (itor != sessionMap.end())
 		{
-			std::unique_lock Lock(sessionMapLock);
-			session = std::make_shared<RUDPSession>(sessionId);
-			sessionMap.insert({ sessionId, session });
+			return itor->second;
 		}
+	}
 
+	{
+		std::unique_lock Lock(sessionMapLock);
+		auto newSession = std::make_shared<RUDPSession>(inSessionId);
+		sessionMap.insert({ inSessionId, newSession });
 
+		return newSession;
 	}
 }
 

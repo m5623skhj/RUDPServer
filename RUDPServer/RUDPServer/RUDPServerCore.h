@@ -57,6 +57,9 @@ private:
 	void FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo);
 
 private:
+	std::shared_ptr<RUDPSession> FindOrInsertSession();
+
+private:
 	struct TickSet
 	{
 		UINT64 nowTick = 0;
