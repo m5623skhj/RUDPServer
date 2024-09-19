@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RUDPServer", "RUDPServer\RU
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RUDPClient", "RUDPClient\RUDPClient.vcxproj", "{89003125-E3D7-47C8-84B8-BC0F4A16B130}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ContentsServer", "ContentsServer\ContentsServer.vcxproj", "{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{89003125-E3D7-47C8-84B8-BC0F4A16B130}.Release|x64.Build.0 = Release|x64
 		{89003125-E3D7-47C8-84B8-BC0F4A16B130}.Release|x86.ActiveCfg = Release|Win32
 		{89003125-E3D7-47C8-84B8-BC0F4A16B130}.Release|x86.Build.0 = Release|Win32
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Debug|x64.ActiveCfg = Debug|x64
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Debug|x64.Build.0 = Debug|x64
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Debug|x86.ActiveCfg = Debug|Win32
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Debug|x86.Build.0 = Debug|Win32
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Release|x64.ActiveCfg = Release|x64
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Release|x64.Build.0 = Release|x64
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Release|x86.ActiveCfg = Release|Win32
+		{61DEAFBA-4427-4F7B-9028-DD9BEC5D6AE2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
