@@ -26,6 +26,8 @@ public:
 	bool StartServer(const std::wstring& optionFilePath);
 	void StopServer();
 
+	bool IsServerStopped();
+
 private:
 	[[nodiscard]]
 	bool InitNetwork();
@@ -78,6 +80,7 @@ private:
 	HANDLE logicThreadEventStopHandle{};
 
 	bool threadStopFlag{};
+	bool isServerStopped{};
 
 	unsigned int oneFrame = 33;
 #pragma endregion threads

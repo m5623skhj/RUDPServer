@@ -67,7 +67,13 @@ void RUDPServerCore::StopServer()
 		CloseHandle(handle);
 	}
 
+	isServerStopped = true;
 	std::cout << "Server stop" << std::endl;
+}
+
+bool RUDPServerCore::IsServerStopped()
+{
+	return isServerStopped;
 }
 
 bool RUDPServerCore::InitNetwork()
