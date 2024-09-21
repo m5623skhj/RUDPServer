@@ -19,7 +19,7 @@ RUDPServerCore::RUDPServerCore()
 {
 }
 
-bool RUDPServerCore::StartServer(const std::wstring_view& optionFilePath)
+bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 {
 	if (InitNetwork() == false)
 	{

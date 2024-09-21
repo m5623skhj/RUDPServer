@@ -1,5 +1,4 @@
 #pragma once
-#include <string_view>
 #include <thread>
 #include <vector>
 #include <optional>
@@ -18,13 +17,13 @@ class RUDPSession;
 
 class RUDPServerCore
 {
-private:
+public:
 	RUDPServerCore();
 	virtual ~RUDPServerCore() = default;
 
 public:
 	[[nodiscard]]
-	bool StartServer(const std::wstring_view& optionFilePath);
+	bool StartServer(const std::wstring& optionFilePath);
 	void StopServer();
 
 private:
