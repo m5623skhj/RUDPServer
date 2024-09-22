@@ -82,5 +82,9 @@ void RUDPSession::OnRecvPacket(NetBuffer& recvPacket)
 
 void RUDPSession::OnSessionReleased()
 {
-
+	if (auto packethandler = PacketManager::GetInst().GetPacketHandler(static_cast<PacketId>(PACKET_ID::Disconnect)))
+	{
+		Disconnect tempPacket;
+		PacketManager::HandlePacket(*this, tempPacket);
+	}
 }

@@ -102,6 +102,16 @@ public:
 	PlayerId playerId;
 };
 
+class Disconnect : public IPacket
+{
+public:
+	Disconnect() = default;
+	virtual ~Disconnect() override = default;
+
+public:
+	GET_PACKET_ID(PACKET_ID::Disconnect);
+};
+
 #pragma pack(pop)
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -120,10 +130,12 @@ public:
 #define DECLARE_ALL_HANDLER()\
 	DECLARE_HANDLE_PACKET(Ping)\
 	DECLARE_HANDLE_PACKET(Connect)\
+	DECLARE_HANDLE_PACKET(Disconnect)\
 
 #define REGISTER_PACKET_LIST(){\
 	REGISTER_PACKET(Ping)\
 	REGISTER_PACKET(Connect)\
+	REGISTER_PACKET(Disconnect)\
 }
 
 #pragma endregion PacketHandler

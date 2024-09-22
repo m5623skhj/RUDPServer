@@ -162,6 +162,25 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 		SendTo(restSize, thisThreadSendList, sendedList);
 		CheckSendedList(sendedListSize, sendedList, thisThreadDeletedSession);
 
+		for (auto itor : thisThreadDeletedSession)
+		{
+			std::shared_ptr<RUDPSession> session = nullptr;
+			{
+				std::shared_lock lock(sessionMapLock);
+
+				auto sessionMapItor = sessionMap.find(itor);
+				if (sessionMapItor == sessionMap.end())
+				{
+					continue;
+				}
+
+				session = sessionMapItor->second;
+			}
+		
+			ReleaseSession(inThreadId, (*session));
+		}
+		thisThreadDeletedSession.clear();
+
 #if USE_RETRANSMISSION_SLEEP
 		Sleep(RetransmissionCheckTime);
 #endif

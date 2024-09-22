@@ -22,4 +22,5 @@ enum class PACKET_ID : unsigned int
 	, Ping
 	, Pong
 	, Connect
+	, Disconnect
 };

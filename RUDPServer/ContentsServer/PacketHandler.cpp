@@ -11,6 +11,8 @@ inline std::shared_ptr<Player> GetPlayer(SessionId targetSessionId)
 
 bool PacketManager::HandlePacket(RUDPSession& session, Ping& packet)
 {
+	UNREFERENCED_PARAMETER(packet);
+
 	auto player = GetPlayer(session.GetSessionId());
 	if (player == nullptr)
 	{
@@ -36,4 +38,11 @@ bool PacketManager::HandlePacket(RUDPSession& session, Connect& packet)
 	PlayerManager::GetInst().AddPlayer(player);
 
 	return true;
+}
+
+bool PacketManager::HandlePacket(RUDPSession& session, Disconnect& packet)
+{
+	UNREFERENCED_PARAMETER(packet);
+
+	PlayerManager::GetInst().DeletePlayerBySessionId(session.GetSessionId());
 }
