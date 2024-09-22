@@ -16,10 +16,16 @@
     <Filter Include="소스 파일\TestServer">
       <UniqueIdentifier>{e7dab130-20de-4fb8-92ad-6ef6640e02c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\TestServer\PacketHandler">
+      <UniqueIdentifier>{08e1b2ce-2508-4b29-916a-331642ba2651}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ContentsServer.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketHandler.cpp">
+      <Filter>소스 파일\TestServer\PacketHandler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
