@@ -2,7 +2,7 @@
 #include <thread>
 #include <vector>
 #include <optional>
-#include "EnumType.h"
+#include "CoreType.h"
 #include <shared_mutex>
 #include <unordered_map>
 #include "Queue.h"

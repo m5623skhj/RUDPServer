@@ -59,12 +59,6 @@
     <ClInclude Include="BuildConfig.h">
       <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
     </ClInclude>
-    <ClInclude Include="CoreType.h">
-      <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
-    </ClInclude>
-    <ClInclude Include="EnumType.h">
-      <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
-    </ClInclude>
     <ClInclude Include="CoreUtil.h">
       <Filter>소스 파일\RUDPCore</Filter>
     </ClInclude>
@@ -76,6 +70,9 @@
     </ClInclude>
     <ClInclude Include="PacketManager.h">
       <Filter>소스 파일\PacketManager</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreType.h">
+      <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

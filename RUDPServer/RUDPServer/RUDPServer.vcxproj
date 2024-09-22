@@ -148,13 +148,12 @@
   <ItemGroup>
     <ClInclude Include="BuildConfig.h" />
     <ClInclude Include="CoreStruct.h" />
+    <ClInclude Include="CoreType.h" />
     <ClInclude Include="CoreUtil.h" />
-    <ClInclude Include="EnumType.h" />
     <ClInclude Include="PacketManager.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RUDPServerCore.h" />
     <ClInclude Include="RUDPSession.h" />
-    <ClInclude Include="CoreType.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

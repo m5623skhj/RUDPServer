@@ -3,7 +3,7 @@
 #include <string>
 #include <functional>
 #include "CoreType.h"
-#include "EnumType.h"
+#include "CoreType.h"
 #include "NetServerSerializeBuffer.h"
 
 using PacketId = unsigned int;

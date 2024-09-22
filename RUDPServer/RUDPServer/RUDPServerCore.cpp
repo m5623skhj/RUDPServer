@@ -4,7 +4,7 @@
 #include <vector>
 #include <functional>
 #include "BuildConfig.h"
-#include "EnumType.h"
+#include "CoreType.h"
 #include "RUDPSession.h"
 #include <shared_mutex>
 #include <ranges>
