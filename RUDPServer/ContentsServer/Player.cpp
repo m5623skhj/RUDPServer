@@ -23,3 +23,8 @@ PlayerId Player::GetPlayerId()
 {
 	return playerId;
 }
+
+void Player::OnTick()
+{
+
+}

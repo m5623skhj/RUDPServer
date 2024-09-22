@@ -88,6 +88,20 @@ public:
 	GET_PACKET_ID(PACKET_ID::Pong);
 };
 
+class Connect : public IPacket
+{
+public:
+	Connect() = default;
+	virtual ~Connect() override = default;
+
+public:
+	GET_PACKET_ID(PACKET_ID::Connect)
+	SET_PARAMETERS(playerId);
+
+public:
+	PlayerId playerId;
+};
+
 #pragma pack(pop)
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +119,11 @@ public:
 
 #define DECLARE_ALL_HANDLER()\
 	DECLARE_HANDLE_PACKET(Ping)\
+	DECLARE_HANDLE_PACKET(Connect)\
 
 #define REGISTER_PACKET_LIST(){\
 	REGISTER_PACKET(Ping)\
+	REGISTER_PACKET(Connect)\
 }
 
 #pragma endregion PacketHandler

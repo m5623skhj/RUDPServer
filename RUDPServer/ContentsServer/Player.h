@@ -4,8 +4,6 @@
 class RUDPSession;
 class IPacket;
 
-using PlayerId = unsigned long long;
-
 class Player
 {
 public:
@@ -19,6 +17,9 @@ public:
 public:
 	SessionId GetSessionId();
 	PlayerId GetPlayerId();
+
+public:
+	void OnTick();
 
 private:
 	RUDPSession& session;

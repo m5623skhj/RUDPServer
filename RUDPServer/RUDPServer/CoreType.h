@@ -3,6 +3,9 @@
 using SessionId = unsigned long long;
 const SessionId invalidSessionId = -1;
 
+using PlayerId = unsigned long long;
+const PlayerId invalidPlayerId = -1;
+
 using PacketSequence = unsigned long long;
 
 using PacketRetransmissionCount = unsigned short;
@@ -18,4 +21,5 @@ enum class PACKET_ID : unsigned int
 	InvalidPacketId = 0
 	, Ping
 	, Pong
+	, Connect
 };
