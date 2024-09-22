@@ -1,8 +1,8 @@
 #pragma once
 
-enum class PACKET_ID : unsigned int
+enum class PacketId : unsigned int
 {
-	INVALID_PACKET = 0
-	, PING
-	, PONG
+	InvalidPacketId = 0
+	, Ping
+	, Pong
 };

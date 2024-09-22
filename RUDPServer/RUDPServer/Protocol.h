@@ -6,8 +6,6 @@
 #include "EnumType.h"
 #include "NetServerSerializeBuffer.h"
 
-using PacketId = unsigned int;
-
 #define GET_PACKET_ID(packetId) virtual PacketId GetPacketId() const override { return static_cast<PacketId>(packetId); }
 
 #pragma region ForGameServerPacket
@@ -55,7 +53,6 @@ virtual void PacketToBuffer(OUT NetBuffer& buffer) override { SetParametersToBuf
 ////////////////////////////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
-#pragma region GameServer
 class IPacket
 {
 public:
@@ -68,7 +65,27 @@ public:
 	virtual void BufferToPacket(OUT NetBuffer& buffer) { UNREFERENCED_PARAMETER(buffer); }
 	virtual void PacketToBuffer(OUT NetBuffer& buffer) { UNREFERENCED_PARAMETER(buffer); }
 };
-#pragma endregion GameServer
+
+class Ping : public IPacket
+{
+public:
+	Ping() = default;
+	virtual ~Ping() override = default;
+
+public:
+	GET_PACKET_ID(PacketId::Ping)
+};
+
+class Pong : public IPacket
+{
+public:
+	Pong() = default;
+	virtual ~Pong() override = default;
+
+public:
+	GET_PACKET_ID(PacketId::Pong);
+};
+
 #pragma pack(pop)
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -82,11 +99,13 @@ public:
 }
 
 #define DECLARE_HANDLE_PACKET(PacketType)\
-	static bool HandlePacket(RIOTestSession& session, PacketType& packet);\
+	static bool HandlePacket(RUDPSession& session, PacketType& packet);\
 
 #define DECLARE_ALL_HANDLER()\
+	DECLARE_HANDLE_PACKET(Ping)\
 
 #define REGISTER_PACKET_LIST(){\
+	REGISTER_PACKET(Ping)\
 }
 
 #pragma endregion PacketHandler
