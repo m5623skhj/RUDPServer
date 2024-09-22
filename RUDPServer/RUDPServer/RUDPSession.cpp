@@ -5,6 +5,7 @@
 #include <ranges>
 #include "Protocol.h"
 #include "PacketManager.h"
+#include "RUDPServerCore.h"
 
 SendPacketSequeceManager::SendPacketSequeceManager()
 {
@@ -21,16 +22,40 @@ void SendPacketSequeceManager::Initialize()
 	sequenceManager.clear();
 }
 
-RUDPSession::RUDPSession(SessionId inSessionId)
+RUDPSession::RUDPSession(RUDPServerCore& inServerCore, const SessionId inSessionId)
+	: serverCore(inServerCore)
+	, sessionId(inSessionId)
 {
 	sendPacketSequenceManager.Initialize();
-	sessionId = inSessionId;
 	clientAddr = RUDPCoreUtil::MakeAddressInfoFromSessionId(sessionId);
 }
 
-void RUDPSession::OnTick()
+void RUDPSession::SendPacket(IPacket& packet, const SessionId targetSessionId)
 {
+	NetBuffer* buffer = NetBuffer::Alloc();
+	if (buffer == nullptr)
+	{
+		std::cout << "Buffer is nullptr in RUDPSession::SendPacket()" << std::endl;
+		return;
+	}
 
+	*buffer << packet.GetPacketId();
+	packet.PacketToBuffer(*buffer);
+
+	auto sendPacketInfo = sendPacketInfoPool->Alloc();
+	if (sendPacketInfo == nullptr)
+	{
+		std::cout << "SendPacketInfo is nullptr in RUDPSession::SendPacket()" << std::endl;
+		return;
+	}
+
+	sendPacketInfo->Initialize(sessionId, targetSessionId, buffer);
+	serverCore.SendPacketTo(sendPacketInfo);
+}
+
+SessionId RUDPSession::GetSessionId()
+{
+	return sessionId;
 }
 
 void RUDPSession::OnRecvPacket(NetBuffer& recvPacket)

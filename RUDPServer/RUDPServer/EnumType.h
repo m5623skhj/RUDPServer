@@ -1,6 +1,6 @@
 #pragma once
 
-enum class PacketId : unsigned int
+enum class PACKET_ID : unsigned int
 {
 	InvalidPacketId = 0
 	, Ping

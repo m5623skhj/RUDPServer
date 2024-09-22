@@ -255,7 +255,7 @@ std::shared_ptr<RUDPSession> RUDPServerCore::FindOrInsertSession(SessionId inSes
 
 	{
 		std::unique_lock Lock(sessionMapLock);
-		auto newSession = std::make_shared<RUDPSession>(inSessionId);
+		auto newSession = std::make_shared<RUDPSession>(*this, inSessionId);
 		sessionMap.insert({ inSessionId, newSession });
 
 		return newSession;
@@ -387,6 +387,20 @@ bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& re
 
 void RUDPServerCore::SendPacketTo(SendPacketInfo* sendPacketInfo)
 {
+	auto packet = sendPacketInfo->GetBuffer();
+	if (packet == nullptr)
+	{
+		return;
+	}
+
+	if (packet->m_bIsEncoded == false)
+	{
+		packet->m_iWriteLast = packet->m_iWrite;
+		packet->m_iWrite = 0;
+		packet->m_iRead = 0;
+		packet->Encode();
+	}
+
 	++sendPacketInfo->retransmissionCount;
 	uint32_t threadId = RUDPCoreUtil::MakeIPFromSessionId(sendPacketInfo->GetSendTarget());
 	

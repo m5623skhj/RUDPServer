@@ -6,15 +6,19 @@
 struct SendPacketInfo
 {
 public:
-	SendPacketInfo() = default;
-	explicit SendPacketInfo(SessionId sendOwnerId, SessionId sendTargetId, NetBuffer* packet)
-		: sendOwner(sendOwnerId)
-		, sendTargetId(sendTargetId)
-		, buffer(packet)
-		, timestamp(std::chrono::steady_clock::now())
+	SendPacketInfo()
+		: timestamp(std::chrono::steady_clock::now())
 	{
+
 	}
 	~SendPacketInfo() = default;
+
+	void Initialize(const SessionId inSendOwnerId, const SessionId inSendTargetId, NetBuffer* inPacket)
+	{
+		sendOwner = inSendOwnerId;
+		sendTargetId = inSendTargetId;
+		buffer = inPacket;
+	}
 
 public:
 	void FreeBuffer()

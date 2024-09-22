@@ -19,6 +19,9 @@
     <Filter Include="소스 파일\TestServer\PacketHandler">
       <UniqueIdentifier>{08e1b2ce-2508-4b29-916a-331642ba2651}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\TestServer\Player">
+      <UniqueIdentifier>{8a4adc6c-e6fd-40be-8096-1159a1aca3ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ContentsServer.cpp">
@@ -27,10 +30,19 @@
     <ClCompile Include="PacketHandler.cpp">
       <Filter>소스 파일\TestServer\PacketHandler</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerManager.cpp">
+      <Filter>소스 파일\TestServer\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>소스 파일\TestServer\Player</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Player.h">
-      <Filter>소스 파일\TestServer</Filter>
+      <Filter>소스 파일\TestServer\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerManager.h">
+      <Filter>소스 파일\TestServer\Player</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

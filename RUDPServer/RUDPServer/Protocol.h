@@ -6,6 +6,8 @@
 #include "EnumType.h"
 #include "NetServerSerializeBuffer.h"
 
+using PacketId = unsigned int;
+
 #define GET_PACKET_ID(packetId) virtual PacketId GetPacketId() const override { return static_cast<PacketId>(packetId); }
 
 #pragma region ForGameServerPacket
@@ -73,7 +75,7 @@ public:
 	virtual ~Ping() override = default;
 
 public:
-	GET_PACKET_ID(PacketId::Ping)
+	GET_PACKET_ID(PACKET_ID::Ping)
 };
 
 class Pong : public IPacket
@@ -83,7 +85,7 @@ public:
 	virtual ~Pong() override = default;
 
 public:
-	GET_PACKET_ID(PacketId::Pong);
+	GET_PACKET_ID(PACKET_ID::Pong);
 };
 
 #pragma pack(pop)

@@ -2,6 +2,8 @@
 #include <unordered_map>
 #include "CoreStruct.h"
 
+class IPacket;
+
 class RUDPServerCore;
 
 class SendPacketSequeceManager final
@@ -24,11 +26,12 @@ class RUDPSession
 
 public:
 	RUDPSession() = delete;
-	explicit RUDPSession(SessionId inSessionId);
+	explicit RUDPSession(RUDPServerCore& inServerCore, const SessionId inSessionId);
 	~RUDPSession() = default;
 
 public:
-	void OnTick();
+	void SendPacket(IPacket& packet, const SessionId targetSessionId);
+	SessionId GetSessionId();
 
 private:
 	void OnRecvPacket(NetBuffer& recvPacket);
@@ -43,4 +46,5 @@ private:
 private:
 	SessionId sessionId{};
 	SOCKADDR_IN clientAddr{};
+	RUDPServerCore& serverCore;
 };

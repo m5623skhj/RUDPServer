@@ -1,8 +1,26 @@
 #pragma once
+#include "CoreType.h"
 
-#include "RUDPSession.h"
+class RUDPSession;
+class IPacket;
 
-class Player : public RUDPSession
+using PlayerId = unsigned long long;
+
+class Player
 {
+public:
+	Player() = delete;
+	explicit Player(PlayerId inPlayerId, RUDPSession& inSession);
+	~Player() = default;
 
+public:
+	void SendPacketTo(IPacket& packet, const SessionId targetSessionId);
+
+public:
+	SessionId GetSessionId();
+	PlayerId GetPlayerId();
+
+private:
+	RUDPSession& session;
+	PlayerId playerId{};
 };
