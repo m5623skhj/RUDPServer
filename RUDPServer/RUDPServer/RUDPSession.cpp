@@ -7,26 +7,10 @@
 #include "PacketManager.h"
 #include "RUDPServerCore.h"
 
-SendPacketSequeceManager::SendPacketSequeceManager()
-{
-	Initialize();
-}
-
-void SendPacketSequeceManager::Initialize()
-{
-	for (auto& value : sequenceManager | std::views::values)
-	{
-		value.FreeBuffer();
-	}
-
-	sequenceManager.clear();
-}
-
 RUDPSession::RUDPSession(RUDPServerCore& inServerCore, const SessionId inSessionId)
 	: serverCore(inServerCore)
 	, sessionId(inSessionId)
 {
-	sendPacketSequenceManager.Initialize();
 	clientAddr = RUDPCoreUtil::MakeAddressInfoFromSessionId(sessionId);
 }
 

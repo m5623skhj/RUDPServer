@@ -6,20 +6,6 @@ class IPacket;
 
 class RUDPServerCore;
 
-class SendPacketSequeceManager final
-{
-public:
-	SendPacketSequeceManager();
-	~SendPacketSequeceManager() = default;
-
-public:
-	void Initialize();
-
-private:
-	// 락이 필요한지 이후에 검토 필요
-	std::unordered_map<PacketSequence, SendPacketInfo> sequenceManager;
-};
-
 class RUDPSession
 {
 	friend RUDPServerCore;
@@ -40,8 +26,6 @@ private:
 private:
 	PacketSequence lastSendPacketSequence{};
 
-private:
-	SendPacketSequeceManager sendPacketSequenceManager;
 
 private:
 	SessionId sessionId{};
