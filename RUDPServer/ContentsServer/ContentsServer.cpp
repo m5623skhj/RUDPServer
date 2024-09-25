@@ -2,6 +2,21 @@
 #include "RUDPServerCore.h"
 #include <conio.h>
 
+bool StopServer()
+{
+	char inputKey;
+	if (_kbhit() != 0)
+	{
+		inputKey = _getch();
+		if (inputKey == 'Q' || inputKey == 'q')
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 int main()
 {
 	RUDPServerCore server;
@@ -11,17 +26,12 @@ int main()
 		return 0;
 	}
 
-	char inputKey;
 	while (server.IsServerStopped() == true)
 	{
-		if (_kbhit() != 0)
+		if (StopServer() == true)
 		{
-			inputKey = _getch();
-			if (inputKey == 'Q' || inputKey == 'q')
-			{
-				server.StopServer();
-				break;
-			}
+			server.StopServer();
+			break;
 		}
 	}
 
