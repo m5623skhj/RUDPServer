@@ -28,6 +28,9 @@
     <Filter Include="소스 파일\PacketManager">
       <UniqueIdentifier>{d60917a3-aef1-4114-9eb0-a4770b52b62f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Logger">
+      <UniqueIdentifier>{d5b0a22b-a865-49d1-92c1-fd89d39c759c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -47,6 +50,12 @@
     </ClCompile>
     <ClCompile Include="PacketManager.cpp">
       <Filter>소스 파일\PacketManager</Filter>
+    </ClCompile>
+    <ClCompile Include="LogClass.cpp">
+      <Filter>소스 파일\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>소스 파일\Logger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -73,6 +82,12 @@
     </ClInclude>
     <ClInclude Include="CoreType.h">
       <Filter>소스 파일\RUDPCore\CoreTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="LogClass.h">
+      <Filter>소스 파일\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>소스 파일\Logger</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

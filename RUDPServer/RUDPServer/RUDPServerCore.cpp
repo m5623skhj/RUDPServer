@@ -10,6 +10,7 @@
 #include <ranges>
 #include "CoreUtil.h"
 #include "PacketManager.h"
+#include "Logger.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -26,6 +27,8 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 		std::cout << "InitNetwork failed" << std::endl;
 		return false;
 	}
+
+	Logger::GetInstance().RunLoggerThread();
 
 	sessionMap.clear();
 	sendList.clear();
@@ -66,6 +69,8 @@ void RUDPServerCore::StopServer()
 	{
 		CloseHandle(handle);
 	}
+
+	Logger::GetInstance().StopLoggerThread();
 
 	isServerStopped = true;
 	std::cout << "Server stop" << std::endl;
