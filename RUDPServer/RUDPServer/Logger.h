@@ -20,7 +20,7 @@ public:
 
 #pragma region Thread
 public:
-	void RunLoggerThread();
+	void RunLoggerThread(bool isAlsoPrintToConsole);
 	void Worker();
 	void StopLoggerThread();
 
@@ -47,6 +47,8 @@ private:
 
 	std::ofstream logFileStream;
 #pragma endregion LogWaitingQueue
+
+	bool isAlsoPrintToConsole{};
 };
 
 namespace LogHelper

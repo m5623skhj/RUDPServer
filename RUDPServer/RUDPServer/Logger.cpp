@@ -1,5 +1,6 @@
 #include "PreCompile.h"
 #include "Logger.h"
+#include <syncstream>
 
 #define LOG_HANDLE  WAIT_OBJECT_0
 #define STOP_HANDLE WAIT_OBJECT_0 + 1
@@ -46,8 +47,10 @@ Logger& Logger::GetInstance()
 	return inst;
 }
 
-void Logger::RunLoggerThread()
+void Logger::RunLoggerThread(bool isAlsoPrintToConsole)
 {
+	isAlsoPrintToConsole = isAlsoPrintToConsole;
+
 	loggerEventHandles[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	loggerEventHandles[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (loggerEventHandles[0] == NULL || loggerEventHandles[1] == NULL)
@@ -128,4 +131,10 @@ void Logger::WriteLogToFile(std::shared_ptr<LogBase> logObject)
 {
 	auto logJson = logObject->ObjectToJsonImpl();
 	logFileStream << logJson << '\n';
+
+	if (isAlsoPrintToConsole == true)
+	{
+		std::osyncstream sync_out(std::cout);
+		sync_out << logJson << std::endl;
+	}
 }

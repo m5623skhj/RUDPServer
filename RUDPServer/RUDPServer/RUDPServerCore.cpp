@@ -28,7 +28,7 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 		return false;
 	}
 
-	Logger::GetInstance().RunLoggerThread();
+	Logger::GetInstance().RunLoggerThread(false);
 
 	sessionMap.clear();
 	sendList.clear();
