@@ -398,9 +398,8 @@ void RUDPServerCore::CollectExternalDeleteSession(std::unordered_set<SessionId>&
 void RUDPServerCore::DeleteSession(std::shared_ptr<RUDPSession> deleteTargetSession)
 {
 	uint32_t threadId = GetSessionThreadId(deleteTargetSession->clientAddr.sin_addr.S_un.S_addr);
-	
 	{
-		std::scoped_lock lock(deleteSessionListLock[threadId]);
+		std::scoped_lock lock(*deleteSessionListLock[threadId]);
 		deleteSessionList[threadId].push_back(deleteTargetSession);
 	}
 }
