@@ -12,6 +12,7 @@ using PacketRetransmissionCount = unsigned short;
 const PacketRetransmissionCount maxPacketRetransmissionCount = 8;
 
 const unsigned long long RetransmissionCheckTime = 8;
+const unsigned long long DeleteThreadSleepTime = 1000;
 
 #define USE_RETRANSMISSION_SLEEP 1
 #define OUT

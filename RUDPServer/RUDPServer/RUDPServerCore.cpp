@@ -36,11 +36,15 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 	sessionMap.reserve(logicThreadCount);
 	sendList.reserve(logicThreadCount);
 	logicThreadEventHandleList.reserve(logicThreadCount);
+	deleteSessionList.reserve(logicThreadCount);
+	deleteSessionListLock.reserve(logicThreadCount);
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
 		sendList.emplace_back();
 		sendListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
+		deleteSessionList.emplace_back(std::list<std::shared_ptr<RUDPSession>>());
+		deleteSessionListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 	}
 	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
 	StartThreads();
@@ -166,6 +170,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 
 		SendTo(restSize, thisThreadSendList, sendedList);
 		CheckSendedList(sendedListSize, sendedList, thisThreadDeletedSession);
+		CollectExternalDeleteSession(thisThreadDeletedSession, inThreadId);
 
 		for (auto itor : thisThreadDeletedSession)
 		{
@@ -194,7 +199,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 
 void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 {
-	HANDLE eventHandleList[2] = {logicThreadEventHandleList[inThreadId], logicThreadEventStopHandle};
+	HANDLE eventHandleList[2] = { logicThreadEventHandleList[inThreadId], logicThreadEventStopHandle };
 	while (true)
 	{
 		const auto waitResult = WaitForMultipleObjects(2, eventHandleList, FALSE, INFINITE);
@@ -204,8 +209,9 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 		}
 		else if (waitResult == WAIT_OBJECT_0 + 1)
 		{
+			RecvFromClient(recvBufferStoreList[inThreadId]);
 			std::cout << "Logic thread stop. ThreadId is " << inThreadId << std::endl;
-			// Check all logic event is finished
+			break;
 		}
 		else
 		{
@@ -215,7 +221,7 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 	}
 }
 
-uint32_t RUDPServerCore::GetLogicThreadId(uint32_t clientAddr)
+uint32_t RUDPServerCore::GetSessionThreadId(uint32_t clientAddr)
 {
 	return clientAddr % logicThreadCount;
 }
@@ -241,7 +247,7 @@ void RUDPServerCore::MakePacket(std::shared_ptr<RUDPSession> session, NetBuffer&
 	if (recvBuffer.GetUseSize() != GetPayloadLength(recvBuffer) || 
 		recvBuffer.Decode() == false)
 	{
-		// Delete session
+		DeleteSession(session);
 	}
 	else
 	{
@@ -302,7 +308,7 @@ void RUDPServerCore::StartThreads()
 
 void RUDPServerCore::SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer)
 {
-	const uint32_t logicThreadId = GetLogicThreadId(clientAddr.sin_addr.S_un.S_addr);
+	const uint32_t logicThreadId = GetSessionThreadId(clientAddr.sin_addr.S_un.S_addr);
 
 	recvBufferStoreList[logicThreadId].Enqueue(std::move(std::make_pair(clientAddr, buffer)));
 	SetEvent(logicThreadEventHandleList[logicThreadId]);
@@ -382,6 +388,21 @@ void RUDPServerCore::FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo)
 {
 	NetBuffer::Free(freeTargetSendPacketInfo->GetBuffer());
 	sendPacketInfoPool->Free(freeTargetSendPacketInfo);
+}
+
+void RUDPServerCore::CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSetunsigned, unsigned short inThreadId)
+{
+
+}
+
+void RUDPServerCore::DeleteSession(std::shared_ptr<RUDPSession> deleteTargetSession)
+{
+	uint32_t threadId = GetSessionThreadId(deleteTargetSession->clientAddr.sin_addr.S_un.S_addr);
+	
+	{
+		std::scoped_lock lock(deleteSessionListLock[threadId]);
+		deleteSessionList[threadId].push_back(deleteTargetSession);
+	}
 }
 
 std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const SOCKADDR_IN& clientAddr)
