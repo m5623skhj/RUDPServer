@@ -36,15 +36,15 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 	sessionMap.reserve(logicThreadCount);
 	sendList.reserve(logicThreadCount);
 	logicThreadEventHandleList.reserve(logicThreadCount);
-	deleteSessionList.reserve(logicThreadCount);
-	deleteSessionListLock.reserve(logicThreadCount);
+	deleteSessionIdList.reserve(logicThreadCount);
+	deleteSessionIdListLock.reserve(logicThreadCount);
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
 		sendList.emplace_back();
 		sendListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
-		deleteSessionList.emplace_back(std::list<std::shared_ptr<RUDPSession>>());
-		deleteSessionListLock.emplace_back(std::make_unique<std::recursive_mutex>());
+		deleteSessionIdList.emplace_back(std::list<SessionId>());
+		deleteSessionIdListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 	}
 	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
 	StartThreads();
@@ -390,17 +390,20 @@ void RUDPServerCore::FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo)
 	sendPacketInfoPool->Free(freeTargetSendPacketInfo);
 }
 
-void RUDPServerCore::CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSetunsigned, unsigned short inThreadId)
+void RUDPServerCore::CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSetunsigned, unsigned short threadId)
 {
-
+	std::scoped_lock lock(*deleteSessionIdListLock[threadId]);
+	deletedSessionSetunsigned.insert(deleteSessionIdList[threadId].begin(), deleteSessionIdList[threadId].end());
+	
+	deleteSessionIdList[threadId].clear();
 }
 
 void RUDPServerCore::DeleteSession(std::shared_ptr<RUDPSession> deleteTargetSession)
 {
 	uint32_t threadId = GetSessionThreadId(deleteTargetSession->clientAddr.sin_addr.S_un.S_addr);
 	{
-		std::scoped_lock lock(*deleteSessionListLock[threadId]);
-		deleteSessionList[threadId].push_back(deleteTargetSession);
+		std::scoped_lock lock(*deleteSessionIdListLock[threadId]);
+		deleteSessionIdList[threadId].push_back(deleteTargetSession->GetSessionId());
 	}
 }
 

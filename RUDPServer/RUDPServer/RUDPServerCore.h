@@ -58,7 +58,7 @@ private:
 	void SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList);
 	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionSet);
 	void FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo);
-	void CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSet, unsigned short inThreadId);
+	void CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId);
 
 private:
 	std::shared_ptr<RUDPSession> FindOrInsertSession(SessionId inSessionId);
@@ -97,8 +97,8 @@ private:
 private:
 	std::shared_mutex sessionMapLock;
 	std::unordered_map<UINT64, std::shared_ptr<RUDPSession>> sessionMap;
-	std::vector<std::list<std::shared_ptr<RUDPSession>>> deleteSessionList;
-	std::vector<std::unique_ptr<std::recursive_mutex>> deleteSessionListLock;
+	std::vector<std::list<SessionId>> deleteSessionIdList;
+	std::vector<std::unique_ptr<std::recursive_mutex>> deleteSessionIdListLock;
 #pragma endregion Session
 
 #pragma region Send
