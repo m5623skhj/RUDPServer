@@ -274,22 +274,30 @@ WORD RUDPServerCore::GetPayloadLength(OUT NetBuffer& buffer)
 
 std::shared_ptr<RUDPSession> RUDPServerCore::FindOrInsertSession(SessionId inSessionId)
 {
+	std::shared_ptr<RUDPSession> session = nullptr;
+	do
 	{
-		std::shared_lock Lock(sessionMapLock);
-		auto itor = sessionMap.find(inSessionId);
-		if (itor != sessionMap.end())
 		{
-			return itor->second;
+			std::shared_lock Lock(sessionMapLock);
+			auto itor = sessionMap.find(inSessionId);
+			if (itor != sessionMap.end())
+			{
+				session = itor->second;
+				break;
+			}
 		}
-	}
 
-	{
-		std::unique_lock Lock(sessionMapLock);
-		auto newSession = std::make_shared<RUDPSession>(*this, inSessionId);
-		sessionMap.insert({ inSessionId, newSession });
+		{
+			std::unique_lock Lock(sessionMapLock);
+			auto newSession = std::make_shared<RUDPSession>(*this, inSessionId);
+			sessionMap.insert({ inSessionId, newSession });
 
-		return newSession;
-	}
+			session = newSession;
+		}
+		session->OnConnected();
+	} while (false);
+
+	return session;
 }
 
 void RUDPServerCore::StartThreads()

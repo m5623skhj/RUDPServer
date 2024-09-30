@@ -21,11 +21,11 @@ public:
 
 private:
 	void OnRecvPacket(NetBuffer& recvPacket);
+	void OnConnected();
 	void OnSessionReleased();
 
 private:
 	PacketSequence lastSendPacketSequence{};
-
 
 private:
 	SessionId sessionId{};
