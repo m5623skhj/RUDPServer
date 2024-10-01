@@ -61,6 +61,8 @@ private:
 	void CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId);
 
 private:
+	std::shared_ptr<RUDPSession> FindSession(SessionId inSessionId);
+	std::shared_ptr<RUDPSession> InsertSession(SessionId inSessionId);
 	std::shared_ptr<RUDPSession> FindOrInsertSession(SessionId inSessionId);
 
 private:

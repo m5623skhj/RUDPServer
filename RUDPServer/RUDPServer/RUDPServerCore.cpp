@@ -272,29 +272,43 @@ WORD RUDPServerCore::GetPayloadLength(OUT NetBuffer& buffer)
 	return payloadLength;
 }
 
+std::shared_ptr<RUDPSession> RUDPServerCore::FindSession(SessionId inSessionId)
+{
+	std::shared_lock Lock(sessionMapLock);
+	auto itor = sessionMap.find(inSessionId);
+	if (itor != sessionMap.end())
+	{
+		return itor->second;
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<RUDPSession> RUDPServerCore::InsertSession(SessionId inSessionId)
+{
+	std::unique_lock Lock(sessionMapLock);
+	auto newSession = std::make_shared<RUDPSession>(*this, inSessionId);
+	if (sessionMap.insert({ inSessionId, newSession }).second == true)
+	{
+		return newSession;
+	}
+
+	return nullptr;
+}
+
 std::shared_ptr<RUDPSession> RUDPServerCore::FindOrInsertSession(SessionId inSessionId)
 {
 	std::shared_ptr<RUDPSession> session = nullptr;
 	do
 	{
+		if (session = FindSession(inSessionId))
 		{
-			std::shared_lock Lock(sessionMapLock);
-			auto itor = sessionMap.find(inSessionId);
-			if (itor != sessionMap.end())
-			{
-				session = itor->second;
-				break;
-			}
+			break;
 		}
-
+		else if (session = InsertSession(inSessionId))
 		{
-			std::unique_lock Lock(sessionMapLock);
-			auto newSession = std::make_shared<RUDPSession>(*this, inSessionId);
-			sessionMap.insert({ inSessionId, newSession });
-
-			session = newSession;
+			break;
 		}
-		session->OnConnected();
 	} while (false);
 
 	return session;
