@@ -21,7 +21,7 @@ public:
 
 private:
 	void OnRecvPacket(NetBuffer& recvPacket);
-	bool OnConnected();
+	bool OnConnected(NetBuffer& recvPacket);
 	void OnSessionReleased();
 
 private:

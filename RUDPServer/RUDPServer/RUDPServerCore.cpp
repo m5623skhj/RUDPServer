@@ -241,7 +241,7 @@ void RUDPServerCore::RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, Ne
 		if (session == nullptr)
 		{
 			session = InsertSession(sessionId);
-			if (session == nullptr || session->OnConnected() == false)
+			if (session == nullptr || session->OnConnected(*recvObject.second) == false)
 			{
 				DeleteSession(session);
 			}

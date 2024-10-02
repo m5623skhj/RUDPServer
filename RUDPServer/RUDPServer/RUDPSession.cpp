@@ -64,12 +64,26 @@ void RUDPSession::OnRecvPacket(NetBuffer& recvPacket)
 	packetHandler(*this, recvPacket, anyPacket);
 }
 
-bool RUDPSession::OnConnected()
+bool RUDPSession::OnConnected(NetBuffer& recvPacket)
 {
-	if (auto packetHandler = PacketManager::GetInst().GetPacketHandler(static_cast<PacketId>(PACKET_ID::Connect)))
+	PacketId packetId;
+	recvPacket >> packetId;
+
+	if (packetId != static_cast<PacketId>(PACKET_ID::Connect))
 	{
-		Connect packet;
-		return PacketManager::HandlePacket(*this, packet);
+		return false;
+	}
+
+	auto packet = PacketManager::GetInst().MakePacket(packetId);
+	if (packet == nullptr)
+	{
+		return false;
+	}
+
+	if (auto packetHandler = PacketManager::GetInst().GetPacketHandler(packetId))
+	{
+		packet->BufferToPacket(recvPacket);
+		return PacketManager::HandlePacket(*this, *(static_cast<Connect*>(packet.get())));
 	}
 
 	return false;
