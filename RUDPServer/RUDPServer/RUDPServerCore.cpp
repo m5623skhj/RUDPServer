@@ -271,14 +271,16 @@ void RUDPServerCore::MakePacket(std::shared_ptr<RUDPSession> session, NetBuffer&
 WORD RUDPServerCore::GetPayloadLength(OUT NetBuffer& buffer)
 {
 	BYTE code;
-	WORD payloadLength;
-	buffer >> code >> payloadLength;
+	buffer >> code;
 
 	if (code != NetBuffer::m_byHeaderCode)
 	{
 		std::cout << "code : " << code << std::endl;
 		return 0;
 	}
+
+	WORD payloadLength;
+	buffer >> payloadLength;
 
 	return payloadLength;
 }
