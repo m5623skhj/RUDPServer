@@ -237,7 +237,18 @@ void RUDPServerCore::RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, Ne
 		}
 
 		SessionId sessionId = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(recvObject.first.sin_addr.S_un.S_addr, recvObject.first.sin_port);
-		std::shared_ptr<RUDPSession> session = FindOrInsertSession(sessionId);
+		auto session = FindSession(sessionId);
+		if (session == nullptr)
+		{
+			session = InsertSession(sessionId);
+			if (session == nullptr || session->OnConnected() == false)
+			{
+				DeleteSession(session);
+			}
+
+			return;
+		}
+
 		MakePacket(session, *recvObject.second);
 	}
 }

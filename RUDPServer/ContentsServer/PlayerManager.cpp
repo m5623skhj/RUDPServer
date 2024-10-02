@@ -7,22 +7,32 @@ PlayerManager& PlayerManager::GetInst()
 	return instance;
 }
 
-void PlayerManager::AddPlayer(std::shared_ptr<Player> player)
+bool PlayerManager::AddPlayer(std::shared_ptr<Player> player)
 {
 	if (player == nullptr)
 	{
-		return;
+		return false;
+	}
+
+	{
+		std::shared_lock lock(sessionIdToPlayerMapLock);
+		if (sessionIdToPlayerMap.find(player->GetSessionId()) == sessionIdToPlayerMap.end())
+		{
+			return false;
+		}
 	}
 
 	{
 		std::unique_lock lock(playerIdToPlayerMapLock);
-		playerIdToPlayerMap.insert_or_assign(player->GetPlayerId(), player);
+		playerIdToPlayerMap.insert({ player->GetPlayerId(), player });
 	}
 
 	{
 		std::unique_lock lock(sessionIdToPlayerMapLock);
-		sessionIdToPlayerMap.insert_or_assign(player->GetPlayerId(), player);
+		sessionIdToPlayerMap.insert({ player->GetSessionId(), player });
 	}
+
+	return true;
 }
 
 void PlayerManager::DeletePlayerByPlayerId(PlayerId targetPlayerId)

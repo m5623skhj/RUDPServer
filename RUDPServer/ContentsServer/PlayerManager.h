@@ -14,7 +14,7 @@ public:
 	static PlayerManager& GetInst();
 
 public:
-	void AddPlayer(std::shared_ptr<Player> player);
+	bool AddPlayer(std::shared_ptr<Player> player);
 	void DeletePlayerByPlayerId(PlayerId targetPlayerId);
 	void DeletePlayerBySessionId(SessionId targetSessionId);
 

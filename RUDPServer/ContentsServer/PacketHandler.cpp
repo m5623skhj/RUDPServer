@@ -35,9 +35,7 @@ bool PacketManager::HandlePacket(RUDPSession& session, Connect& packet)
 	}
 
 	auto player = std::make_shared<Player>(packet.playerId, session);
-	PlayerManager::GetInst().AddPlayer(player);
-
-	return true;
+	return PlayerManager::GetInst().AddPlayer(player);
 }
 
 bool PacketManager::HandlePacket(RUDPSession& session, Disconnect& packet)
