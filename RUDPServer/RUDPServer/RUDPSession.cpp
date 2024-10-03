@@ -23,7 +23,8 @@ void RUDPSession::SendPacket(IPacket& packet, const SessionId targetSessionId)
 		return;
 	}
 
-	*buffer << packet.GetPacketId();
+	PACKET_TYPE packetType = PACKET_TYPE::SendType;
+	*buffer << packetType << packet.GetPacketId();
 	packet.PacketToBuffer(*buffer);
 
 	auto sendPacketInfo = sendPacketInfoPool->Alloc();

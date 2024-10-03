@@ -47,8 +47,12 @@ public:
 
 private:
 	void RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>& recvBufferList);
+	void ProcessByPacketType(std::pair<SOCKADDR_IN, NetBuffer*>& recvObject);
 	void MakePacket(std::shared_ptr<RUDPSession> session, NetBuffer& recvBuffer);
 	WORD GetPayloadLength(OUT NetBuffer& buffer);
+
+private:
+	void AddNewSession(SessionId sessionId, NetBuffer& recvBuffer);
 
 private:
 	void StartThreads();

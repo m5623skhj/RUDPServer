@@ -236,20 +236,51 @@ void RUDPServerCore::RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, Ne
 			return;
 		}
 
-		SessionId sessionId = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(recvObject.first.sin_addr.S_un.S_addr, recvObject.first.sin_port);
-		auto session = FindSession(sessionId);
-		if (session == nullptr)
+		ProcessByPacketType(recvObject);
+	}
+}
+
+void RUDPServerCore::ProcessByPacketType(std::pair<SOCKADDR_IN, NetBuffer*>& recvObject)
+{
+	PACKET_TYPE packeType;
+	*recvObject.second >> packeType;
+
+	SessionId sessionId = RUDPCoreUtil::MakeSessionKeyFromIPAndPort(recvObject.first.sin_addr.S_un.S_addr, recvObject.first.sin_port);
+	switch (packeType)
+	{
+	case PACKET_TYPE::ConnectType:
 		{
-			session = InsertSession(sessionId);
-			if (session == nullptr || session->OnConnected(*recvObject.second) == false)
+			AddNewSession(sessionId, *recvObject.second);
+		}
+		break;
+	case PACKET_TYPE::DisconnectType:
+		{
+			auto session = FindSession(sessionId);
+			if (session == nullptr)
 			{
-				DeleteSession(session);
+				return;
 			}
 
-			return;
+			DeleteSession(session);
 		}
+		break;
+	case PACKET_TYPE::SendReplyType:
+		{
+			
+		}
+		break;
+	default:
+		std::cout << "Invalid packet type " << static_cast<unsigned char>(packeType) << std::endl;
+		break;
+	}
+}
 
-		MakePacket(session, *recvObject.second);
+void RUDPServerCore::AddNewSession(SessionId sessionId, NetBuffer& recvBuffer)
+{
+	auto session = InsertSession(sessionId);
+	if (session->OnConnected(recvBuffer) == false)
+	{
+		DeleteSession(session);
 	}
 }
 

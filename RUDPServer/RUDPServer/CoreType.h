@@ -24,3 +24,12 @@ enum class PACKET_ID : unsigned int
 	, Connect
 	, Disconnect
 };
+
+enum class PACKET_TYPE : unsigned char
+{
+	InvalidType = 0
+	, ConnectType
+	, DisconnectType
+	, SendType
+	, SendReplyType
+};
