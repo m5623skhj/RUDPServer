@@ -522,7 +522,7 @@ void RUDPServerCore::SendPacketTo(SendPacketInfo* sendPacketInfo)
 	sendList[threadId].Enqueue(sendPacketInfo);
 }
 
-void RUDPServerCore::RecvSendReply(SessionId sessionId, NetBuffer& recvObject)
+void RUDPServerCore::RecvSendReply(SessionId sessionId, NetBuffer& recvObject, unsigned short threadId)
 {
 
 }

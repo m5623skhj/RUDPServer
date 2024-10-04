@@ -1,6 +1,7 @@
 #pragma once
-#include <unordered_map>
+#include <unordered_set>
 #include "CoreStruct.h"
+#include <shared_mutex>
 
 class IPacket;
 
@@ -25,7 +26,9 @@ private:
 	void OnSessionReleased();
 
 private:
-	PacketSequence lastSendPacketSequence{};
+	std::atomic<PacketSequence> lastSendPacketSequence{};
+	std::unordered_set<PacketSequence> replyWaitingSet;
+	std::shared_mutex replyWaitingSetLock;
 
 private:
 	SessionId sessionId{};

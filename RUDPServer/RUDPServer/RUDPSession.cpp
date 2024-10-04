@@ -12,6 +12,7 @@ RUDPSession::RUDPSession(RUDPServerCore& inServerCore, const SessionId inSession
 	, sessionId(inSessionId)
 {
 	clientAddr = RUDPCoreUtil::MakeAddressInfoFromSessionId(sessionId);
+	replyWaitingSet.clear();
 }
 
 void RUDPSession::SendPacket(IPacket& packet, const SessionId targetSessionId)
@@ -23,15 +24,22 @@ void RUDPSession::SendPacket(IPacket& packet, const SessionId targetSessionId)
 		return;
 	}
 
-	PACKET_TYPE packetType = PACKET_TYPE::SendType;
-	*buffer << packetType << packet.GetPacketId();
-	packet.PacketToBuffer(*buffer);
-
 	auto sendPacketInfo = sendPacketInfoPool->Alloc();
 	if (sendPacketInfo == nullptr)
 	{
 		std::cout << "SendPacketInfo is nullptr in RUDPSession::SendPacket()" << std::endl;
+		NetBuffer::Free(buffer);
 		return;
+	}
+
+	PACKET_TYPE packetType = PACKET_TYPE::SendType;
+	unsigned long long packetSequence = ++lastSendPacketSequence;
+	*buffer << packetType << packetSequence << packet.GetPacketId();
+	packet.PacketToBuffer(*buffer);
+
+	{
+		std::unique_lock lock(replyWaitingSetLock);
+		replyWaitingSet.insert(packetSequence);
 	}
 
 	sendPacketInfo->Initialize(sessionId, targetSessionId, buffer);

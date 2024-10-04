@@ -111,7 +111,7 @@ public:
 	void SendPacketTo(SendPacketInfo* sendPacketInfo);
 
 private:
-	void RecvSendReply(SessionId sessionId, NetBuffer& recvObject);
+	void RecvSendReply(SessionId sessionId, NetBuffer& recvObject, unsigned short threadId);
 
 private:
 	std::vector<CListBaseQueue<SendPacketInfo*>> sendList;
