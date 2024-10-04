@@ -237,6 +237,7 @@ void RUDPServerCore::RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, Ne
 		}
 
 		ProcessByPacketType(recvObject);
+		NetBuffer::Free(recvObject.second);
 	}
 }
 
@@ -266,7 +267,7 @@ void RUDPServerCore::ProcessByPacketType(std::pair<SOCKADDR_IN, NetBuffer*>& rec
 		break;
 	case PACKET_TYPE::SendReplyType:
 		{
-			
+			RecvSendReply(sessionId, *recvObject.second);
 		}
 		break;
 	default:
@@ -519,4 +520,9 @@ void RUDPServerCore::SendPacketTo(SendPacketInfo* sendPacketInfo)
 	
 	std::scoped_lock lock(*sendListLock[threadId]);
 	sendList[threadId].Enqueue(sendPacketInfo);
+}
+
+void RUDPServerCore::RecvSendReply(SessionId sessionId, NetBuffer& recvObject)
+{
+
 }

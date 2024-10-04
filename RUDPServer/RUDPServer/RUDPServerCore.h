@@ -10,7 +10,6 @@
 #include "CoreType.h"
 #include <list>
 #include "CoreStruct.h"
-#include "LockFreeMemoryPool.h"
 #include <unordered_set>
 
 class RUDPSession;
@@ -110,6 +109,9 @@ private:
 #pragma region Send
 public:
 	void SendPacketTo(SendPacketInfo* sendPacketInfo);
+
+private:
+	void RecvSendReply(SessionId sessionId, NetBuffer& recvObject);
 
 private:
 	std::vector<CListBaseQueue<SendPacketInfo*>> sendList;
