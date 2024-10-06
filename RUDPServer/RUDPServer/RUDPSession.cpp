@@ -12,7 +12,7 @@ RUDPSession::RUDPSession(RUDPServerCore& inServerCore, const SessionId inSession
 	, sessionId(inSessionId)
 {
 	clientAddr = RUDPCoreUtil::MakeAddressInfoFromSessionId(sessionId);
-	replyWaitingSet.clear();
+	replyWaitingMap.clear();
 }
 
 void RUDPSession::SendPacket(IPacket& packet, const SessionId targetSessionId)
@@ -36,11 +36,6 @@ void RUDPSession::SendPacket(IPacket& packet, const SessionId targetSessionId)
 	unsigned long long packetSequence = ++lastSendPacketSequence;
 	*buffer << packetType << packetSequence << packet.GetPacketId();
 	packet.PacketToBuffer(*buffer);
-
-	{
-		std::unique_lock lock(replyWaitingSetLock);
-		replyWaitingSet.insert(packetSequence);
-	}
 
 	sendPacketInfo->Initialize(sessionId, targetSessionId, buffer);
 	serverCore.SendPacketTo(sendPacketInfo);
@@ -105,4 +100,49 @@ void RUDPSession::OnSessionReleased()
 		Disconnect packet;
 		PacketManager::HandlePacket(*this, packet);
 	}
+}
+
+SendPacketInfo* RUDPSession::GetSendPacketInfo(PacketSequence recvPacketSequence)
+{
+	SendPacketInfo* waitingReplyInfo = nullptr;
+	{
+		std::shared_lock lock(replyWaitingMapLock);
+
+		auto itor = replyWaitingMap.find(recvPacketSequence);
+		if (itor != replyWaitingMap.end())
+		{
+			waitingReplyInfo = itor->second;
+		}
+	}
+
+	return waitingReplyInfo;
+}
+
+bool RUDPSession::DeleteSendPacketInfo(PacketSequence recvPacketSequence)
+{
+	SendPacketInfo* waitingReplyInfo = nullptr;
+	{
+		std::shared_lock lock(replyWaitingMapLock);
+
+		auto itor = replyWaitingMap.find(recvPacketSequence);
+		if (itor == replyWaitingMap.end())
+		{
+			return false;
+		}
+
+		waitingReplyInfo = itor->second;
+	}
+
+	{
+		std::unique_lock lock(replyWaitingMapLock);
+	
+		replyWaitingMap.erase(recvPacketSequence);
+	}
+
+	if (waitingReplyInfo != nullptr)
+	{
+		sendPacketInfoPool->Free(waitingReplyInfo);
+	}
+
+	return true;
 }

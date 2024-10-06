@@ -18,6 +18,7 @@ public:
 		sendOwner = inSendOwnerId;
 		sendTargetId = inSendTargetId;
 		buffer = inPacket;
+		NetBuffer::AddRefCount(inPacket);
 	}
 
 public:

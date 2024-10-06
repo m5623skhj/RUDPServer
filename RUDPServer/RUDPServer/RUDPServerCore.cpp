@@ -267,7 +267,13 @@ void RUDPServerCore::ProcessByPacketType(std::pair<SOCKADDR_IN, NetBuffer*>& rec
 		break;
 	case PACKET_TYPE::SendReplyType:
 		{
-			RecvSendReply(sessionId, *recvObject.second);
+			auto session = FindSession(sessionId);
+			if (session == nullptr)
+			{
+				return;
+			}
+
+			RecvSendReply(session, *recvObject.second);
 		}
 		break;
 	default:
@@ -522,7 +528,25 @@ void RUDPServerCore::SendPacketTo(SendPacketInfo* sendPacketInfo)
 	sendList[threadId].Enqueue(sendPacketInfo);
 }
 
-void RUDPServerCore::RecvSendReply(SessionId sessionId, NetBuffer& recvObject, unsigned short threadId)
+void RUDPServerCore::RecvSendReply(std::shared_ptr<RUDPSession> session, NetBuffer& recvPacket)
 {
+	if (recvPacket.GetUseSize() < sizeof(PacketSequence))
+	{
+		DeleteSession(session);
+		return;
+	}
 
+	PacketSequence packetSequence;
+	recvPacket >> packetSequence;
+
+	if (session->lastSendPacketSequence < packetSequence)
+	{
+		DeleteSession(session);
+		return;
+	}
+
+	if (not session->DeleteSendPacketInfo(packetSequence))
+	{
+		std::cout << "Invalid packet sequence. SessionId : " << session->GetSessionId() << " PacketSequence : " << packetSequence << std::endl;
+	}
 }
