@@ -67,6 +67,10 @@ void RUDPServerCore::StopServer()
 	{
 		thread.join();
 	}
+	for (auto& thread : retransmissionThreadList)
+	{
+		thread.join();
+	}
 
 	CloseHandle(logicThreadEventStopHandle);
 	for (auto handle : logicThreadEventHandleList)
@@ -371,11 +375,13 @@ void RUDPServerCore::StartThreads()
 {
 	recvBufferStoreList.reserve(logicThreadCount);
 	logicThreadList.reserve(logicThreadCount);
+	retransmissionThreadList.reserve(logicThreadCount);
 
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
 		recvBufferStoreList.emplace_back(CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>());
 		logicThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
+		retransmissionThreadList.emplace_back([this, i]() {this->RunRetransmissionThread(i); });
 	}
 
 	recvThread = std::thread([this]() {this->RunIORecvWorkerThread(); });
