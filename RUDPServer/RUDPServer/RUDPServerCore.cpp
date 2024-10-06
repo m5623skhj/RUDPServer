@@ -256,24 +256,26 @@ void RUDPServerCore::ProcessByPacketType(std::pair<SOCKADDR_IN, NetBuffer*>& rec
 		break;
 	case PACKET_TYPE::DisconnectType:
 		{
-			auto session = FindSession(sessionId);
-			if (session == nullptr)
+			if (auto session = FindSession(sessionId))
 			{
-				return;
+				DeleteSession(session);
 			}
-
-			DeleteSession(session);
+		}
+		break;
+	case PACKET_TYPE::SendType:
+		{
+			if (auto session = FindSession(sessionId))
+			{
+				MakePacket(session, *recvObject.second);
+			}
 		}
 		break;
 	case PACKET_TYPE::SendReplyType:
 		{
-			auto session = FindSession(sessionId);
-			if (session == nullptr)
+			if (auto session = FindSession(sessionId))
 			{
-				return;
+				RecvSendReply(session, *recvObject.second);
 			}
-
-			RecvSendReply(session, *recvObject.second);
 		}
 		break;
 	default:
