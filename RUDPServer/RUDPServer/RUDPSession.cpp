@@ -100,6 +100,8 @@ void RUDPSession::OnSessionReleased()
 		Disconnect packet;
 		PacketManager::HandlePacket(*this, packet);
 	}
+
+	isDeletedSession = true;
 }
 
 SendPacketInfo* RUDPSession::GetSendPacketInfo(PacketSequence recvPacketSequence)

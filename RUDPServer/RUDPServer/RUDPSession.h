@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include "CoreStruct.h"
+#include <shared_mutex>
 
 class IPacket;
 
@@ -36,5 +37,7 @@ private:
 private:
 	SessionId sessionId{};
 	SOCKADDR_IN clientAddr{};
+	bool isDeletedSession{};
+
 	RUDPServerCore& serverCore;
 };

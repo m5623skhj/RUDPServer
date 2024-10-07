@@ -40,6 +40,7 @@ public:
 	void RunIORecvWorkerThread();
 	void RunRetransmissionThread(unsigned short inThreadId);
 	void RunLogicWorkerThread(unsigned short inThreadId);
+	void RunSessionDeleteThread();
 
 public:
 	FORCEINLINE uint32_t GetSessionThreadId(uint32_t clientAddr);
@@ -59,9 +60,9 @@ private:
 
 private:
 	void SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList);
-	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionSet);
+	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionList);
 	void FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo);
-	void CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId);
+	void CollectRetransmissionExceededSession(OUT std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId);
 
 private:
 	std::shared_ptr<RUDPSession> FindSession(SessionId inSessionId);
@@ -79,6 +80,7 @@ private:
 	std::thread recvThread;
 	std::vector<std::thread> retransmissionThreadList;
 	std::vector<std::thread> logicThreadList;
+	std::thread sessionDeleteThread;
 	std::vector<CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>> recvBufferStoreList;
 	unsigned short logicThreadCount{};
 
@@ -97,7 +99,7 @@ public:
 
 private:
 	std::shared_ptr<RUDPSession> GetSession(const SOCKADDR_IN& clientAddr);
-	FORCEINLINE bool ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession);
+	FORCEINLINE bool ReleaseSession(OUT RUDPSession& releaseSession);
 
 private:
 	std::shared_mutex sessionMapLock;

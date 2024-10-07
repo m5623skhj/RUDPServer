@@ -78,6 +78,7 @@ void RUDPServerCore::StopServer()
 		CloseHandle(handle);
 	}
 
+	sessionDeleteThread.join();
 	Logger::GetInstance().StopLoggerThread();
 
 	isServerStopped = true;
@@ -174,26 +175,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 
 		SendTo(restSize, thisThreadSendList, sendedList);
 		CheckSendedList(sendedListSize, sendedList, thisThreadDeletedSession);
-		CollectExternalDeleteSession(thisThreadDeletedSession, inThreadId);
-
-		for (auto itor : thisThreadDeletedSession)
-		{
-			std::shared_ptr<RUDPSession> session = nullptr;
-			{
-				std::shared_lock lock(sessionMapLock);
-
-				auto sessionMapItor = sessionMap.find(itor);
-				if (sessionMapItor == sessionMap.end())
-				{
-					continue;
-				}
-
-				session = sessionMapItor->second;
-			}
-		
-			ReleaseSession(inThreadId, (*session));
-		}
-		thisThreadDeletedSession.clear();
+		CollectRetransmissionExceededSession(thisThreadDeletedSession, inThreadId);
 
 #if USE_RETRANSMISSION_SLEEP
 		Sleep(RetransmissionCheckTime);
@@ -221,6 +203,34 @@ void RUDPServerCore::RunLogicWorkerThread(unsigned short inThreadId)
 		{
 			std::cout << "Invalid logic thread wait result. Error is " << WSAGetLastError() << std::endl;
 			continue;
+		}
+	}
+}
+
+void RUDPServerCore::RunSessionDeleteThread()
+{
+	while (threadStopFlag == false)
+	{
+		for (uint32_t threadId = 0; threadId < deleteSessionIdList.size(); ++threadId)
+		{
+			std::scoped_lock lock(*deleteSessionIdListLock[threadId]);
+			for (auto& sessionId : deleteSessionIdList[threadId])
+			{
+				std::shared_ptr<RUDPSession> session = nullptr;
+				{
+					std::shared_lock lock(sessionMapLock);
+
+					auto sessionMapItor = sessionMap.find(sessionId);
+					if (sessionMapItor == sessionMap.end())
+					{
+						continue;
+					}
+
+					session = sessionMapItor->second;
+				}
+				ReleaseSession(*session);
+			}
+			deleteSessionIdList[threadId].clear();
 		}
 	}
 }
@@ -384,6 +394,7 @@ void RUDPServerCore::StartThreads()
 		retransmissionThreadList.emplace_back([this, i]() {this->RunRetransmissionThread(i); });
 	}
 
+	sessionDeleteThread = std::thread([this]() {this->RunSessionDeleteThread(); });
 	recvThread = std::thread([this]() {this->RunIORecvWorkerThread(); });
 }
 
@@ -442,23 +453,25 @@ void RUDPServerCore::CheckSendedList(size_t checkSize, std::list<SendPacketInfo*
 		}
 
 		SessionId targetSessionId = sendedItem->GetSendTarget();
-		if (deletedSessionSet.find(targetSessionId) != deletedSessionSet.end())
+		if (deletedSessionSet.find(targetSessionId) == deletedSessionSet.end())
+		{
+			if (not sendedItem->isSendedPacket)
+			{
+				if (sendedItem->retransmissionCount >= maxPacketRetransmissionCount)
+				{
+					deletedSessionSet.insert(targetSessionId);
+				}
+				else
+				{
+					SendPacketTo(sendedItem);
+					++itor;
+					continue;
+				}
+			}
+		}
+		else
 		{
 			FreeToSendedItem(*itor);
-			itor = sendedList.erase(itor);
-			continue;
-		}
-
-		if (not sendedItem->isSendedPacket)
-		{
-			if (sendedItem->retransmissionCount >= maxPacketRetransmissionCount)
-			{
-				deletedSessionSet.insert(targetSessionId);
-			}
-			else
-			{
-				SendPacketTo(sendedItem);
-			}
 		}
 
 		itor = sendedList.erase(itor);
@@ -471,12 +484,12 @@ void RUDPServerCore::FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo)
 	sendPacketInfoPool->Free(freeTargetSendPacketInfo);
 }
 
-void RUDPServerCore::CollectExternalDeleteSession(std::unordered_set<SessionId>& deletedSessionSetunsigned, unsigned short threadId)
+void RUDPServerCore::CollectRetransmissionExceededSession(OUT std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId)
 {
 	std::scoped_lock lock(*deleteSessionIdListLock[threadId]);
-	deletedSessionSetunsigned.insert(deleteSessionIdList[threadId].begin(), deleteSessionIdList[threadId].end());
-	
-	deleteSessionIdList[threadId].clear();
+
+	std::copy(deletedSessionSet.begin(), deletedSessionSet.end(), std::back_inserter(deleteSessionIdList[threadId]));
+	deletedSessionSet.clear();
 }
 
 void RUDPServerCore::DeleteSession(std::shared_ptr<RUDPSession> deleteTargetSession)
@@ -502,7 +515,7 @@ std::shared_ptr<RUDPSession> RUDPServerCore::GetSession(const SOCKADDR_IN& clien
 	return iter->second;
 }
 
-bool RUDPServerCore::ReleaseSession(unsigned short threadId, OUT RUDPSession& releaseSession)
+bool RUDPServerCore::ReleaseSession(OUT RUDPSession& releaseSession)
 {
 	{
 		std::unique_lock<std::shared_mutex> lock(sessionMapLock);
