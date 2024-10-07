@@ -43,4 +43,5 @@ bool PacketManager::HandlePacket(RUDPSession& session, Disconnect& packet)
 	UNREFERENCED_PARAMETER(packet);
 
 	PlayerManager::GetInst().DeletePlayerBySessionId(session.GetSessionId());
+	return true;
 }
