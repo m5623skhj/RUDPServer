@@ -178,7 +178,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 		CollectRetransmissionExceededSession(thisThreadDeletedSession, inThreadId);
 
 #if USE_RETRANSMISSION_SLEEP
-		Sleep(RetransmissionCheckTime);
+		Sleep(retransmissionCheckTime);
 #endif
 	}
 }
@@ -232,6 +232,8 @@ void RUDPServerCore::RunSessionDeleteThread()
 			}
 			deleteSessionIdList[threadId].clear();
 		}
+
+		Sleep(deleteThreadCheckTime);
 	}
 }
 
