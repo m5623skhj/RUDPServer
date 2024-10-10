@@ -38,6 +38,7 @@ private:
 #pragma region threads
 public:
 	void RunIORecvWorkerThread();
+	void RunSendThread(unsigned short inThreadId);
 	void RunRetransmissionThread(unsigned short inThreadId);
 	void RunLogicWorkerThread(unsigned short inThreadId);
 	void RunSessionDeleteThread();
@@ -78,6 +79,7 @@ private:
 
 private:
 	std::thread recvThread;
+	std::vector<std::thread> sendThreadList;
 	std::vector<std::thread> retransmissionThreadList;
 	std::vector<std::thread> logicThreadList;
 	std::thread sessionDeleteThread;

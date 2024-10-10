@@ -71,6 +71,10 @@ void RUDPServerCore::StopServer()
 	{
 		thread.join();
 	}
+	for (auto& thread : sendThreadList)
+	{
+		thread.join();
+	}
 
 	CloseHandle(logicThreadEventStopHandle);
 	for (auto handle : logicThreadEventHandleList)
@@ -156,6 +160,14 @@ void RUDPServerCore::RunIORecvWorkerThread()
 
 		buffer->MoveWritePos(recvSize);
 		SendToLogicThread(clientAddr, buffer);
+	}
+}
+
+void RUDPServerCore::RunSendThread(unsigned short inThreadId)
+{
+	while (threadStopFlag == false)
+	{
+
 	}
 }
 
@@ -388,12 +400,14 @@ void RUDPServerCore::StartThreads()
 	recvBufferStoreList.reserve(logicThreadCount);
 	logicThreadList.reserve(logicThreadCount);
 	retransmissionThreadList.reserve(logicThreadCount);
+	sendThreadList.reserve(logicThreadCount);
 
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
 		recvBufferStoreList.emplace_back(CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>());
 		logicThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
-		retransmissionThreadList.emplace_back([this, i]() {this->RunRetransmissionThread(i); });
+		retransmissionThreadList.emplace_back([this, i]() { this->RunRetransmissionThread(i); });
+		sendThreadList.emplace_back([this, i]() { this->RunSendThread(i); });
 	}
 
 	sessionDeleteThread = std::thread([this]() {this->RunSessionDeleteThread(); });
