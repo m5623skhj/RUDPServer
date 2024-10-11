@@ -15,7 +15,8 @@
 #pragma comment(lib, "ws2_32.lib")
 
 RUDPServerCore::RUDPServerCore()
-	: sock(INVALID_SOCKET)
+	: recvSocket(INVALID_SOCKET)
+	, sendSocket(INVALID_SOCKET)
 	, port(-1)
 {
 }
@@ -57,7 +58,8 @@ void RUDPServerCore::StopServer()
 {
 	threadStopFlag = true;
 
-	closesocket(sock);
+	closesocket(recvSocket);
+	closesocket(sendSocket);
 	WSACleanup();
 
 	recvThread.join();
@@ -105,8 +107,9 @@ bool RUDPServerCore::InitNetwork()
 		return false;
 	}
 
-	this->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (sock == INVALID_SOCKET)
+	recvSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	sendSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (recvSocket == INVALID_SOCKET || sendSocket == INVALID_SOCKET)
 	{
 		std::cout << "socket create failed " << WSAGetLastError() << std::endl;
 		WSACleanup();
@@ -120,10 +123,11 @@ bool RUDPServerCore::InitNetwork()
 	serverAddr.sin_addr.S_un.S_addr = INADDR_ANY;
 	serverAddr.sin_port = htons(port);
 
-	if (bind(sock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+	if (bind(recvSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 	{
 		std::cout << "bind failed " << WSAGetLastError() << std::endl;
-		closesocket(sock);
+		closesocket(recvSocket);
+		closesocket(sendSocket);
 		WSACleanup();
 		return false;
 	}
@@ -142,7 +146,7 @@ void RUDPServerCore::RunIORecvWorkerThread()
 		auto buffer = NetBuffer::Alloc();
 		do
 		{
-			recvSize = recvfrom(sock
+			recvSize = recvfrom(recvSocket
 				, buffer->GetBufferPtr()
 				, buffer->GetFreeSize()
 				, NULL
@@ -437,7 +441,7 @@ void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendL
 
 		auto targetAddress = RUDPCoreUtil::MakeAddressInfoFromSessionId(sendPacketInfo->GetSendTarget());
 		auto buffer = sendPacketInfo->GetBuffer();
-		sendto(sock
+		sendto(sendSocket
 			, buffer->GetBufferPtr()
 			, buffer->GetUseSize() + df_HEADER_SIZE
 			, NULL

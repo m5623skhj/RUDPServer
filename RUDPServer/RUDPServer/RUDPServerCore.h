@@ -32,7 +32,8 @@ private:
 	bool InitNetwork();
 
 private:
-	SOCKET sock;
+	SOCKET recvSocket;
+	SOCKET sendSocket;
 	unsigned short port;
 
 #pragma region threads
