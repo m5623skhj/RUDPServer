@@ -135,11 +135,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ContentsServer.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="PacketHandler.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ContentsServer.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerManager.h" />
   </ItemGroup>

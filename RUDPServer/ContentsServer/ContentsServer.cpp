@@ -1,39 +1,23 @@
 ﻿#include "PreCompile.h"
-#include "RUDPServerCore.h"
-#include <conio.h>
+#include "ContentsServer.h"
 
-bool StopServer()
+ContentsServer& ContentsServer::GetInst()
 {
-	char inputKey;
-	if (_kbhit() != 0)
-	{
-		inputKey = _getch();
-		if (inputKey == 'Q' || inputKey == 'q')
-		{
-			return true;
-		}
-	}
-
-	return false;
+	static ContentsServer instance;
+	return instance;
 }
 
-int main()
+bool ContentsServer::StartServer(const std::wstring& optionFilePath)
 {
-	RUDPServerCore server;
-	if (not server.StartServer(L""))
-	{
-		std::cout << "StartServer() failed" << std::endl;
-		return 0;
-	}
+	return serverCore.StartServer(optionFilePath);
+}
 
-	while (server.IsServerStopped() == true)
-	{
-		if (StopServer() == true)
-		{
-			server.StopServer();
-			break;
-		}
-	}
+bool ContentsServer::IsServerStopped()
+{
+	return serverCore.IsServerStopped();
+}
 
-	return 0;
+void ContentsServer::StopServer()
+{
+	serverCore.StopServer();
 }
