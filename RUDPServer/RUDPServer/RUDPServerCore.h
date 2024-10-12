@@ -87,6 +87,7 @@ private:
 	std::vector<CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>> recvBufferStoreList;
 	unsigned short logicThreadCount{};
 
+	std::vector<HANDLE> sendThreadEventHandleList;
 	std::vector<HANDLE> logicThreadEventHandleList;
 	HANDLE logicThreadEventStopHandle{};
 

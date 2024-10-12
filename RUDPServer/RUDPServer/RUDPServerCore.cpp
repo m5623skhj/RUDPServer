@@ -36,6 +36,7 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 
 	sessionMap.reserve(logicThreadCount);
 	sendList.reserve(logicThreadCount);
+	sendThreadEventHandleList.reserve(logicThreadCount);
 	logicThreadEventHandleList.reserve(logicThreadCount);
 	deleteSessionIdList.reserve(logicThreadCount);
 	deleteSessionIdListLock.reserve(logicThreadCount);
@@ -43,6 +44,7 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 	{
 		sendList.emplace_back();
 		sendListLock.emplace_back(std::make_unique<std::recursive_mutex>());
+		sendThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 		deleteSessionIdList.emplace_back(std::list<SessionId>());
 		deleteSessionIdListLock.emplace_back(std::make_unique<std::recursive_mutex>());
@@ -79,6 +81,10 @@ void RUDPServerCore::StopServer()
 	}
 
 	CloseHandle(logicThreadEventStopHandle);
+	for (auto handle : sendThreadEventHandleList)
+	{
+		CloseHandle(handle);
+	}
 	for (auto handle : logicThreadEventHandleList)
 	{
 		CloseHandle(handle);
@@ -157,7 +163,7 @@ void RUDPServerCore::RunIORecvWorkerThread()
 			{
 				int error = WSAGetLastError();
 				// 家南 俊矾 贸府
-
+				std::cout << "recvfrom() error : " << error << std::endl;
 				continue;
 			}
 		} while (false);
@@ -169,9 +175,25 @@ void RUDPServerCore::RunIORecvWorkerThread()
 
 void RUDPServerCore::RunSendThread(unsigned short inThreadId)
 {
+	HANDLE eventHandleList[2] = { sendThreadEventHandleList[inThreadId], logicThreadEventStopHandle };
 	while (threadStopFlag == false)
 	{
-
+		const auto waitResult = WaitForMultipleObjects(2, eventHandleList, FALSE, INFINITE);
+		if (waitResult == WAIT_OBJECT_0)
+		{
+			//SendTo();
+		}
+		else if (waitResult == WAIT_OBJECT_0 + 1)
+		{
+			//SendTo();
+			std::cout << "Send thread stop. ThreadId is " << inThreadId << std::endl;
+			break;
+		}
+		else
+		{
+			std::cout << "Invalid send thread wait result. Error is " << WSAGetLastError() << std::endl;
+			continue;
+		}
 	}
 }
 
