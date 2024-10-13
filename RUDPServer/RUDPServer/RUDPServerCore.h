@@ -25,6 +25,7 @@ public:
 	bool StartServer(const std::wstring& optionFilePath);
 	void StopServer();
 
+	[[nodiscard]]
 	bool IsServerStopped();
 
 private:
@@ -45,12 +46,14 @@ public:
 	void RunSessionDeleteThread();
 
 public:
+	[[nodiscard]]
 	FORCEINLINE uint32_t GetSessionThreadId(uint32_t clientAddr);
 
 private:
 	void RecvFromClient(OUT CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>& recvBufferList);
 	void ProcessByPacketType(std::pair<SOCKADDR_IN, NetBuffer*>& recvObject);
 	void MakePacket(std::shared_ptr<RUDPSession> session, NetBuffer& recvBuffer);
+	[[nodiscard]]
 	WORD GetPayloadLength(OUT NetBuffer& buffer);
 
 private:
@@ -67,8 +70,11 @@ private:
 	void CollectRetransmissionExceededSession(OUT std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId);
 
 private:
+	[[nodiscard]]
 	std::shared_ptr<RUDPSession> FindSession(SessionId inSessionId);
+	[[nodiscard]]
 	std::shared_ptr<RUDPSession> InsertSession(SessionId inSessionId);
+	[[nodiscard]]
 	std::shared_ptr<RUDPSession> FindOrInsertSession(SessionId inSessionId);
 
 private:
@@ -102,6 +108,7 @@ public:
 	void DeleteSession(std::shared_ptr<RUDPSession> deleteTargetSession);
 
 private:
+	[[nodiscard]]
 	std::shared_ptr<RUDPSession> GetSession(const SOCKADDR_IN& clientAddr);
 	FORCEINLINE bool ReleaseSession(OUT RUDPSession& releaseSession);
 

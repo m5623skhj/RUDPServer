@@ -22,11 +22,14 @@ public:
 
 private:
 	void OnRecvPacket(NetBuffer& recvPacket);
+	[[nodiscard]]
 	bool OnConnected(NetBuffer& recvPacket);
 	void OnSessionReleased();
 
 private:
+	[[nodiscard]]
 	SendPacketInfo* GetSendPacketInfo(PacketSequence recvPacketSequence);
+	[[nodiscard]]
 	bool DeleteSendPacketInfo(PacketSequence recvPacketSequence);
 
 private:

@@ -14,7 +14,9 @@ public:
 	static ContentsServer& GetInst();
 
 public:
+	[[nodiscard]]
 	bool StartServer(const std::wstring& optionFilePath);
+	[[nodiscard]]
 	bool IsServerStopped();
 	void StopServer();
 

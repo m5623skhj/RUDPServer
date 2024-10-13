@@ -21,7 +21,9 @@ private:
 
 public:
 	static PacketManager& GetInst();
+	[[nodiscard]]
 	std::shared_ptr<IPacket> MakePacket(PacketId packetId);
+	[[nodiscard]]
 	PacketHandler GetPacketHandler(PacketId packetId);
 
 	void Init();

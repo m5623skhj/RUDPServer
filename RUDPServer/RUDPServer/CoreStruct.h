@@ -28,8 +28,11 @@ public:
 		buffer = nullptr;
 	}
 
+	[[nodiscard]]
 	SessionId GetSendOwner() const { return sendOwner; }
+	[[nodiscard]]
 	SessionId GetSendTarget() const { return sendTargetId; }
+	[[nodiscard]]
 	NetBuffer* GetBuffer() { return buffer; }
 
 public:
