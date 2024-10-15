@@ -266,8 +266,13 @@ void RUDPServerCore::RunSessionDeleteThread()
 
 					session = sessionMapItor->second;
 				}
-				ReleaseSession(*session);
+
+				if (session != nullptr)
+				{
+					ReleaseSession(*session);
+				}
 			}
+
 			deleteSessionIdList[threadId].clear();
 		}
 
