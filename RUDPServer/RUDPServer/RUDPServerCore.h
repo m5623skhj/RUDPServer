@@ -40,7 +40,7 @@ private:
 #pragma region threads
 public:
 	void RunIORecvWorkerThread();
-	void RunSendThread(unsigned short inThreadId);
+	void RunIOSendWorkerThread(unsigned short inThreadId);
 	void RunRetransmissionThread(unsigned short inThreadId);
 	void RunLogicWorkerThread(unsigned short inThreadId);
 	void RunSessionDeleteThread();

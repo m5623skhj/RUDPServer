@@ -173,7 +173,7 @@ void RUDPServerCore::RunIORecvWorkerThread()
 	}
 }
 
-void RUDPServerCore::RunSendThread(unsigned short inThreadId)
+void RUDPServerCore::RunIOSendWorkerThread(unsigned short inThreadId)
 {
 	HANDLE eventHandleList[2] = { sendThreadEventHandleList[inThreadId], logicThreadEventStopHandle };
 	while (threadStopFlag == false)
@@ -438,7 +438,7 @@ void RUDPServerCore::StartThreads()
 		recvBufferStoreList.emplace_back(CListBaseQueue<std::pair<SOCKADDR_IN, NetBuffer*>>());
 		logicThreadList.emplace_back([this, i]() { this->RunLogicWorkerThread(i); });
 		retransmissionThreadList.emplace_back([this, i]() { this->RunRetransmissionThread(i); });
-		sendThreadList.emplace_back([this, i]() { this->RunSendThread(i); });
+		sendThreadList.emplace_back([this, i]() { this->RunIOSendWorkerThread(i); });
 	}
 
 	sessionDeleteThread = std::thread([this]() {this->RunSessionDeleteThread(); });
