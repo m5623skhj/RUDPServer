@@ -64,7 +64,7 @@ private:
 	inline void SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer);
 
 private:
-	void SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList);
+	void SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList, unsigned short threadId);
 	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionList);
 	void FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo);
 	void CollectRetransmissionExceededSession(OUT std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId);
@@ -127,8 +127,10 @@ private:
 	void RecvSendReply(std::shared_ptr<RUDPSession> session, NetBuffer& recvPacket);
 
 private:
-	std::vector<CListBaseQueue<SendPacketInfo*>> sendList;
+	std::vector<CListBaseQueue<SendPacketInfo*>> sendQueueList;
 	std::vector<std::unique_ptr<std::recursive_mutex>> sendListLock;
-	
+	std::vector<std::list<SendPacketInfo*>> sendedPacketList;
+	std::vector<std::unique_ptr<std::recursive_mutex>> sendedPacketListLock;
+
 #pragma endregion Send
 };

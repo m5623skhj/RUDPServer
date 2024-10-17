@@ -32,18 +32,23 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 	Logger::GetInstance().RunLoggerThread(false);
 
 	sessionMap.clear();
-	sendList.clear();
+	sendQueueList.clear();
+	sendedPacketList.clear();
 
 	sessionMap.reserve(logicThreadCount);
-	sendList.reserve(logicThreadCount);
+	sendQueueList.reserve(logicThreadCount);
+	sendedPacketList.reserve(logicThreadCount);
+	sendedPacketListLock.reserve(logicThreadCount);
 	sendThreadEventHandleList.reserve(logicThreadCount);
 	logicThreadEventHandleList.reserve(logicThreadCount);
 	deleteSessionIdList.reserve(logicThreadCount);
 	deleteSessionIdListLock.reserve(logicThreadCount);
 	for (unsigned short i = 0; i < logicThreadCount; ++i)
 	{
-		sendList.emplace_back();
+		sendQueueList.emplace_back();
 		sendListLock.emplace_back(std::make_unique<std::recursive_mutex>());
+		sendedPacketList.emplace_back();
+		sendedPacketListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 		sendThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
 		deleteSessionIdList.emplace_back(std::list<SessionId>());
@@ -176,16 +181,21 @@ void RUDPServerCore::RunIORecvWorkerThread()
 void RUDPServerCore::RunIOSendWorkerThread(unsigned short inThreadId)
 {
 	HANDLE eventHandleList[2] = { sendThreadEventHandleList[inThreadId], logicThreadEventStopHandle };
+	auto& sendQueue = sendQueueList[inThreadId];
+	auto& sendedList = sendedPacketList[inThreadId];
+
 	while (threadStopFlag == false)
 	{
 		const auto waitResult = WaitForMultipleObjects(2, eventHandleList, FALSE, INFINITE);
 		if (waitResult == WAIT_OBJECT_0)
 		{
-			//SendTo();
+			int restSize = sendQueue.GetRestSize();
+			SendTo(restSize, sendQueue, sendedList, inThreadId);
 		}
 		else if (waitResult == WAIT_OBJECT_0 + 1)
 		{
-			//SendTo();
+			int restSize = sendQueue.GetRestSize();
+			SendTo(restSize, sendQueue, sendedList, inThreadId);
 			std::cout << "Send thread stop. ThreadId is " << inThreadId << std::endl;
 			break;
 		}
@@ -201,17 +211,14 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 {
 	std::chrono::time_point now = std::chrono::steady_clock::now();
 	int restSize = 0;
-	auto& thisThreadSendList = sendList[inThreadId];
-	std::list<SendPacketInfo*> sendedList;
+	auto& sendedList = sendedPacketList[inThreadId];
 	std::unordered_set<SessionId> thisThreadDeletedSession;
 
 	while (threadStopFlag == false)
 	{
 		now = std::chrono::steady_clock::now();
 		size_t sendedListSize = sendedList.size();
-		restSize = thisThreadSendList.GetRestSize();
 
-		SendTo(restSize, thisThreadSendList, sendedList);
 		CheckSendedList(sendedListSize, sendedList, thisThreadDeletedSession);
 		CollectRetransmissionExceededSession(thisThreadDeletedSession, inThreadId);
 
@@ -453,7 +460,7 @@ void RUDPServerCore::SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffe
 	SetEvent(logicThreadEventHandleList[logicThreadId]);
 }
 
-void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList)
+void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList, unsigned short threadId)
 {
 	SendPacketInfo* sendPacketInfo;
 
@@ -475,7 +482,10 @@ void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendL
 			, (sockaddr*)(&targetAddress)
 			, sizeof(sockaddr_in));
 
-		sendedList.push_back(sendPacketInfo);
+		{
+			std::scoped_lock lock(*sendedPacketListLock[threadId]);
+			sendedList.push_back(sendPacketInfo);
+		}
 		--restSize;
 	}
 }
@@ -593,7 +603,7 @@ void RUDPServerCore::SendPacketTo(SendPacketInfo* sendPacketInfo)
 	uint32_t threadId = RUDPCoreUtil::MakeIPFromSessionId(sendPacketInfo->GetSendTarget());
 	
 	std::scoped_lock lock(*sendListLock[threadId]);
-	sendList[threadId].Enqueue(sendPacketInfo);
+	sendQueueList[threadId].Enqueue(sendPacketInfo);
 }
 
 void RUDPServerCore::RecvSendReply(std::shared_ptr<RUDPSession> session, NetBuffer& recvPacket)
