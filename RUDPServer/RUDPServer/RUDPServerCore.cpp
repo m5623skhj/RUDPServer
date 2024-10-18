@@ -219,7 +219,7 @@ void RUDPServerCore::RunRetransmissionThread(unsigned short inThreadId)
 		now = std::chrono::steady_clock::now();
 		size_t sendedListSize = sendedList.size();
 
-		CheckSendedList(sendedListSize, sendedList, thisThreadDeletedSession);
+		CheckSendedList(sendedListSize, sendedList, thisThreadDeletedSession, inThreadId);
 		CollectRetransmissionExceededSession(thisThreadDeletedSession, inThreadId);
 
 #if USE_RETRANSMISSION_SLEEP
@@ -490,8 +490,10 @@ void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendL
 	}
 }
 
-void RUDPServerCore::CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionSet)
+void RUDPServerCore::CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId)
 {
+	std::scoped_lock lock(*sendedPacketListLock[threadId]);
+
 	auto itor = sendedList.begin();
 	auto end = sendedList.end();
 	while (itor != end)

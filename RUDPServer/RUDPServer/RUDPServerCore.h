@@ -65,7 +65,7 @@ private:
 
 private:
 	void SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendList, std::list<SendPacketInfo*>& sendedList, unsigned short threadId);
-	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionList);
+	void CheckSendedList(size_t checkSize, std::list<SendPacketInfo*>& sendedList, std::unordered_set<SessionId>& deletedSessionList, unsigned short threadId);
 	void FreeToSendedItem(SendPacketInfo* freeTargetSendPacketInfo);
 	void CollectRetransmissionExceededSession(OUT std::unordered_set<SessionId>& deletedSessionSet, unsigned short threadId);
 
