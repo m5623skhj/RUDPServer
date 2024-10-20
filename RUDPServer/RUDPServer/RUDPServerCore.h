@@ -34,7 +34,7 @@ private:
 
 private:
 	SOCKET recvSocket;
-	SOCKET sendSocket;
+	std::vector<SOCKET> sendSockets;
 	unsigned short port;
 
 #pragma region threads

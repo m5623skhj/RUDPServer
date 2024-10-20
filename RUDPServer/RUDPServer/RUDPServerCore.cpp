@@ -16,7 +16,6 @@
 
 RUDPServerCore::RUDPServerCore()
 	: recvSocket(INVALID_SOCKET)
-	, sendSocket(INVALID_SOCKET)
 	, port(-1)
 {
 }
@@ -31,10 +30,12 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 
 	Logger::GetInstance().RunLoggerThread(false);
 
+	sendSockets.clear();
 	sessionMap.clear();
 	sendQueueList.clear();
 	sendedPacketList.clear();
 
+	sendSockets.reserve(logicThreadCount);
 	sessionMap.reserve(logicThreadCount);
 	sendQueueList.reserve(logicThreadCount);
 	sendedPacketList.reserve(logicThreadCount);
@@ -66,7 +67,10 @@ void RUDPServerCore::StopServer()
 	threadStopFlag = true;
 
 	closesocket(recvSocket);
-	closesocket(sendSocket);
+	for (auto& sendSocket : sendSockets)
+	{
+		closesocket(sendSocket);
+	}
 	WSACleanup();
 
 	recvThread.join();
@@ -119,12 +123,23 @@ bool RUDPServerCore::InitNetwork()
 	}
 
 	recvSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	sendSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (recvSocket == INVALID_SOCKET || sendSocket == INVALID_SOCKET)
+	if (recvSocket == INVALID_SOCKET)
 	{
-		std::cout << "socket create failed " << WSAGetLastError() << std::endl;
+		std::cout << "Recv socket create failed " << WSAGetLastError() << std::endl;
 		WSACleanup();
 		return false;
+	}
+
+	auto sendSocketListSize = sendSockets.size();
+	for (auto i = 0; i < sendSocketListSize; ++i)
+	{
+		sendSockets.emplace_back(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+		if (sendSockets[i] == INVALID_SOCKET)
+		{
+			std::cout << "Send socket create failed " << WSAGetLastError() << std::endl;
+			WSACleanup();
+			return false;
+		}
 	}
 
 	sockaddr_in serverAddr;
@@ -138,7 +153,10 @@ bool RUDPServerCore::InitNetwork()
 	{
 		std::cout << "bind failed " << WSAGetLastError() << std::endl;
 		closesocket(recvSocket);
-		closesocket(sendSocket);
+		for (auto& sendSocket : sendSockets)
+		{
+			closesocket(sendSocket);
+		}
 		WSACleanup();
 		return false;
 	}
@@ -475,7 +493,7 @@ void RUDPServerCore::SendTo(int restSize, CListBaseQueue<SendPacketInfo*>& sendL
 
 		auto targetAddress = RUDPCoreUtil::MakeAddressInfoFromSessionId(sendPacketInfo->GetSendTarget());
 		auto buffer = sendPacketInfo->GetBuffer();
-		sendto(sendSocket
+		sendto(sendSockets[threadId]
 			, buffer->GetBufferPtr()
 			, buffer->GetUseSize() + df_HEADER_SIZE
 			, NULL
