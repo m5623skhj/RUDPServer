@@ -466,8 +466,8 @@ void RUDPServerCore::StartThreads()
 		sendThreadList.emplace_back([this, i]() { this->RunIOSendWorkerThread(i); });
 	}
 
-	sessionDeleteThread = std::thread([this]() {this->RunSessionDeleteThread(); });
-	recvThread = std::thread([this]() {this->RunIORecvWorkerThread(); });
+	sessionDeleteThread = std::thread([this]() { this->RunSessionDeleteThread(); });
+	recvThread = std::thread([this]() { this->RunIORecvWorkerThread(); });
 }
 
 void RUDPServerCore::SendToLogicThread(SOCKADDR_IN& clientAddr, NetBuffer* buffer)
