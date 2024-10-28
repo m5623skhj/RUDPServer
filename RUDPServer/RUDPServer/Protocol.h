@@ -10,7 +10,6 @@ using PacketId = unsigned int;
 
 #define GET_PACKET_ID(packetId) virtual PacketId GetPacketId() const override { return static_cast<PacketId>(packetId); }
 
-#pragma region ForGameServerPacket
 template<typename T>
 void SetBufferToParameters(OUT NetBuffer& buffer, T& param)
 {
@@ -48,7 +47,6 @@ virtual void PacketToBuffer(OUT NetBuffer& buffer) override { SetParametersToBuf
 	SET_BUFFER_TO_PARAMETERS(__VA_ARGS__)\
 	SET_PARAMETERS_TO_BUFFER(__VA_ARGS__)
 
-#pragma endregion ForGameServerPacket
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Packet
