@@ -13,10 +13,31 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\lib">
+      <UniqueIdentifier>{f55d0201-cd7d-47ad-9958-5f29f12839ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Desktop\Common\Log.cpp">
+      <Filter>소스 파일\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Desktop\Common\NetClient.cpp">
+      <Filter>소스 파일\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Desktop\Common\NetServerSerializeBuffer.cpp">
+      <Filter>소스 파일\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Desktop\Common\Parse.cpp">
+      <Filter>소스 파일\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Desktop\Common\PreCompile.cpp">
+      <Filter>소스 파일\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Desktop\Common\Ringbuffer.cpp">
+      <Filter>소스 파일\lib</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
