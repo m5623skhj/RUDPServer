@@ -50,12 +50,12 @@ bool RUDPServerCore::StartServer(const std::wstring& optionFilePath)
 		sendListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 		sendedPacketList.emplace_back();
 		sendedPacketListLock.emplace_back(std::make_unique<std::recursive_mutex>());
-		sendThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
-		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, TRUE, FALSE, NULL));
+		sendThreadEventHandleList.emplace_back(CreateEvent(NULL, FALSE, FALSE, NULL));
+		logicThreadEventHandleList.emplace_back(CreateEvent(NULL, FALSE, FALSE, NULL));
 		deleteSessionIdList.emplace_back(std::list<SessionId>());
 		deleteSessionIdListLock.emplace_back(std::make_unique<std::recursive_mutex>());
 	}
-	logicThreadEventStopHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+	logicThreadEventStopHandle = CreateEvent(NULL, TRUE, FALSE, NULL);
 	StartThreads();
 
 	std::cout << "Server start" << std::endl;
