@@ -10,8 +10,6 @@
 
 RUDP를 만들어 보고, 이를 테스트 하기 위한 프로젝트입니다.
 
-~RIO를 이용하려고 했으나, 구조가 UDP와는 어울리지 않는 것 같아 수정 예정입니다.~
-
 3으로 인하여 해당 프로젝트 대신 [MultiSocketRUDP](https://github.com/m5623skhj/MultiSocketRUDP) 프로젝트를 시작 하였습니다.
 
 ---
